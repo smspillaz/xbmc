@@ -31,8 +31,8 @@
 #include "dialogs/GUIDialogKaiToast.h"
 
 #ifdef HAS_SDL_JOYSTICK
-#include <SDL/SDL.h>
-#include <SDL/SDL_version.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_version.h>
 #include "input/SDLJoystick.h"
 #endif
 
@@ -127,8 +127,10 @@ CHALManager::CHALManager()
   m_Context = NULL;
   m_DBusSystemConnection = NULL;
 #if defined(HAS_SDL_JOYSTICK)
-  const SDL_version *sdl_version = SDL_Linked_Version();
-  m_bMultipleJoysticksSupport = (sdl_version->major >= 1 && sdl_version->minor >= 3)?true:false;
+  SDL_version sdl_version;
+
+  SDL_GetVersion (&sdl_version);
+  m_bMultipleJoysticksSupport = (sdl_version.major >= 1 && sdl_version.minor >= 3)?true:false;
 #endif
 }
 

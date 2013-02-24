@@ -193,7 +193,16 @@ int AG_ConvertSurfacesToDisplayFormat( AG_Frame* frames, int nFrames )
 		{
 			if ( frames[i].surface )
 			{
-				SDL_Surface* surface = (frames[i].surface->flags & SDL_SRCCOLORKEY) ? SDL_DisplayFormatAlpha(frames[i].surface) : SDL_DisplayFormat(frames[i].surface);
+				Uint32 hasColorKey = 0;
+				SDL_GetColorKey (frames[i].surface, &hasColorKey);
+
+				SDL_Surface* surface = hasColorKey != -1 ?
+				    SDL_ConvertSurface (frames[i].surface,
+							frames[i].surface->format,
+							SDL_RLEACCEL) :
+				    SDL_ConvertSurface (frames[i].surface,
+							frames[i].surface->format,
+							0);
 
 				if ( surface )
 				{
@@ -219,8 +228,16 @@ int AG_NormalizeSurfacesToDisplayFormat( AG_Frame* frames, int nFrames )
 
 	if ( nFrames > 0 && frames && frames[0].surface )
 	{
-		SDL_Surface* mainSurface = (frames[0].surface->flags & SDL_SRCCOLORKEY) ? SDL_DisplayFormatAlpha(frames[0].surface) : SDL_DisplayFormat(frames[0].surface);
-		const int newDispose = (frames[0].surface->flags & SDL_SRCCOLORKEY) ? AG_DISPOSE_RESTORE_BACKGROUND : AG_DISPOSE_NONE;
+		Uint32 hasColorKey = 0;
+		SDL_GetColorKey (frames[0].surface, &hasColorKey);
+		SDL_Surface* mainSurface = hasColorKey != -1 ?
+		    SDL_ConvertSurface (frames[0].surface,
+					frames[0].surface->format,
+					SDL_RLEACCEL) :
+		    SDL_ConvertSurface (frames[0].surface,
+					frames[0].surface->format,
+					0);
+		const int newDispose = (hasColorKey != -1) ? AG_DISPOSE_RESTORE_BACKGROUND : AG_DISPOSE_NONE;
 
 		if ( mainSurface )
 		{
@@ -398,7 +415,7 @@ int AG_LoadGIF_RW( SDL_RWops* src, AG_Frame* frames, int maxFrames )
 				goto done;
 
 			if ( gd->g89.transparent >= 0 )
-				SDL_SetColorKey( image, SDL_SRCCOLORKEY, gd->g89.transparent );
+				SDL_SetColorKey( image, SDL_TRUE, gd->g89.transparent );
 
 			frames[iFrame].surface	= image;
 			frames[iFrame].x		= LM_to_uint(buf[0], buf[1]);
@@ -721,7 +738,7 @@ static SDL_Surface* ReadImage( gifdata* gd, int len, int height, int cmapSize, u
 		return NULL;
 	}
 
-	image = SDL_AllocSurface( SDL_SWSURFACE, len, height, 8, 0, 0, 0, 0 );
+	image = SDL_CreateRGBSurface( SDL_SWSURFACE, len, height, 8, 0, 0, 0, 0 );
 
 	for ( i = 0; i < cmapSize; i++ )
 	{

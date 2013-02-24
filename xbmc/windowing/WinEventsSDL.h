@@ -23,7 +23,7 @@
 #define WINDOW_EVENTS_SDL_H
 
 #ifdef HAS_SDL
-#include <SDL/SDL_events.h>
+#include <SDL2/SDL_events.h>
 
 #include "WinEvents.h"
 

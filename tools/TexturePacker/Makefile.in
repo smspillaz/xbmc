@@ -26,13 +26,13 @@ NATIVE_CXXFLAGS+= -I. \
                   -I@abs_top_srcdir@/xbmc/linux
 NATIVE_LIBS    += -L$(NATIVE_ROOT_PATH)/lib
 endif
-NATIVE_LIBS    += -lSDL_image -lSDL -llzo2
+NATIVE_LIBS    += -lSDL2_image -lSDL2 -llzo2
 NATIVE_LIBS    += -L@abs_top_srcdir@/lib/libsquish -lsquish-native
 else
 LIBS    += -L@abs_top_srcdir@/lib/libsquish -lsquish
 endif
 
-LIBS    += -lSDL_image -lSDL -llzo2
+LIBS    += -lSDL2_image -lSDL2 -llzo2
 
 SRCS = \
   md5.cpp \

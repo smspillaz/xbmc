@@ -23,7 +23,7 @@
 
 #include "WinSystemX11GLES.h"
 #include "utils/log.h"
-#include <SDL/SDL_syswm.h>
+#include <SDL2/SDL_syswm.h>
 #include "filesystem/SpecialProtocol.h"
 #include "settings/Settings.h"
 #include "guilib/Texture.h"
@@ -82,8 +82,7 @@ CWinSystemX11GLES::CWinSystemX11GLES() : CWinSystemBase()
   m_eglDisplay = NULL;
   m_eglContext = NULL;
   m_eglSurface = NULL;
-  m_eglWindow  = NULL;
-  m_wmWindow   = NULL;
+  m_eglWindow  = 0;
   m_dpy        = NULL;
   
   m_iVSyncErrors = 0;
@@ -101,10 +100,10 @@ bool CWinSystemX11GLES::InitWindowSystem()
       (m_eglDisplay = eglGetDisplay((EGLNativeDisplayType)m_dpy)) &&
       (val = eglInitialize(m_eglDisplay, &maj, &min)))
   {
-	SDL_EnableUNICODE(1);
+	//SDL_EnableUNICODE(1);
 	// set repeat to 10ms to ensure repeat time < frame time
 	// so that hold times can be reliably detected
-	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, 10);
+	//SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, 10);
 
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE,   RSIZE);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, GSIZE);
@@ -151,14 +150,13 @@ bool CWinSystemX11GLES::DestroyWindowSystem()
 
 bool CWinSystemX11GLES::CreateNewWindow(const CStdString& name, bool fullScreen, RESOLUTION_INFO& res, PHANDLE_EVENT_FUNC userFunction)
 {
-  if(!SetFullScreen(fullScreen, res, false))
-	return false;
+  m_SDLWindow = SDL_CreateWindow ("XBMC Media Center", 0, 0, res.iWidth, res.iHeight, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
   CTexture iconTexture;
   iconTexture.LoadFromFile("special://xbmc/media/icon.png");
 
-  SDL_WM_SetIcon(SDL_CreateRGBSurfaceFrom(iconTexture.GetPixels(), iconTexture.GetWidth(), iconTexture.GetHeight(), BPP, iconTexture.GetPitch(), 0xff0000, 0x00ff00, 0x0000ff, 0xff000000L), NULL);
-  SDL_WM_SetCaption("XBMC Media Center", NULL);
+  //SDL_WM_SetIcon(SDL_CreateRGBSurfaceFrom(iconTexture.GetPixels(), iconTexture.GetWidth(), iconTexture.GetHeight(), BPP, iconTexture.GetPitch(), 0xff0000, 0x00ff00, 0x0000ff, 0xff000000L), NULL);
+  //SDL_WM_SetCaption("XBMC Media Center", NULL);
 
   m_bWindowCreated = true;
 
@@ -173,6 +171,9 @@ bool CWinSystemX11GLES::CreateNewWindow(const CStdString& name, bool fullScreen,
 
 bool CWinSystemX11GLES::DestroyWindow()
 {
+  SDL_DestroyWindow (m_SDLWindow);
+  m_SDLWindow = NULL;
+
   return true;
 }
 
@@ -183,20 +184,13 @@ bool CWinSystemX11GLES::ResizeWindow(int newWidth, int newHeight, int newLeft, i
     m_nWidth  = newWidth;
     m_nHeight = newHeight;
 
-#if (HAS_GLES == 2)
-    int options = 0;
-#else
-    int options = SDL_OPENGL;
-#endif
-    if (m_bFullScreen)
-      options |= SDL_FULLSCREEN;
-    else
-      options |= SDL_RESIZABLE;
+    SDL_SetWindowSize (m_SDLWindow, m_nWidth, m_nHeight);
+    SDL_SetWindowFullscreen (m_SDLWindow, m_bFullScreen ? SDL_TRUE : SDL_FALSE);
 
-    if ((m_SDLSurface = SDL_SetVideoMode(m_nWidth, m_nHeight, 0, options)))
-    {
+    m_SDLSurface = SDL_GetWindowSurface (m_SDLWindow);
+
+    if (m_SDLSurface)
       RefreshEGLContext();
-    }
   }
 
   CRenderSystemGLES::ResetRenderSystem(newWidth, newHeight, false, 0);
@@ -228,20 +222,8 @@ bool CWinSystemX11GLES::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, boo
 
 #endif
 
-#if (HAS_GLES == 2)
-    int options = 0;
-#else
-    int options = SDL_OPENGL;
-#endif
-  if (m_bFullScreen)
-    options |= SDL_FULLSCREEN;
-  else
-    options |= SDL_RESIZABLE;
-
-  if ((m_SDLSurface = SDL_SetVideoMode(m_nWidth, m_nHeight, 0, options)))
-  {
+  if (SDL_SetWindowFullscreen (m_SDLWindow, m_bFullScreen ? SDL_TRUE : SDL_FALSE))
     RefreshEGLContext();
-  }
 
   CRenderSystemGLES::ResetRenderSystem(res.iWidth, res.iHeight, fullScreen, res.fRefreshRate);
   
@@ -337,7 +319,7 @@ bool CWinSystemX11GLES::RefreshEGLContext()
 {
   SDL_SysWMinfo info;
   SDL_VERSION(&info.version);
-  if (SDL_GetWMInfo(&info) <= 0)
+  if (SDL_GetWindowWMInfo(m_SDLWindow, &info) <= 0)
   {
     CLog::Log(LOGERROR, "Failed to get window manager info from SDL");
     return false;
@@ -358,7 +340,6 @@ bool CWinSystemX11GLES::RefreshEGLContext()
   }
 
   m_eglWindow = info.info.x11.window;
-  m_wmWindow  = info.info.x11.wmwindow;
 
   EGLConfig eglConfig = NULL;
   EGLint num;
@@ -438,7 +419,7 @@ bool CWinSystemX11GLES::Minimize()
   if (m_bWasFullScreenBeforeMinimize)
     g_graphicsContext.ToggleFullScreenRoot();
 
-  SDL_WM_IconifyWindow();
+  SDL_MinimizeWindow(m_SDLWindow);
   return true;
 }
 
@@ -449,15 +430,13 @@ bool CWinSystemX11GLES::Restore()
 
 bool CWinSystemX11GLES::Hide()
 {
-  XUnmapWindow(m_dpy, m_wmWindow);
-  XSync(m_dpy, False);
+  SDL_HideWindow (m_SDLWindow);
   return true;
 }
 
 bool CWinSystemX11GLES::Show(bool raise)
 {
-  XMapWindow(m_dpy, m_wmWindow);
-  XSync(m_dpy, False);
+  SDL_ShowWindow (m_SDLWindow);
   return true;
 }
 

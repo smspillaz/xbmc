@@ -648,7 +648,7 @@ esac
 AC_SUBST([ARCH])
 
 
-check_sdl_arch=[`file $USE_TEXTUREPACKER_NATIVE_ROOT/lib/libSDL_image.dylib | awk '{print $NF}'`]
+check_sdl_arch=[`file $USE_TEXTUREPACKER_NATIVE_ROOT/lib/libSDL2_image.dylib | awk '{print $NF}'`]
 if test "x$check_sdl_arch" = "xi386" ; then
   DARWIN_NATIVE_ARCH=-m32
 elif test "x$check_sdl_arch" = "xx86_64" ; then
@@ -1060,7 +1060,7 @@ AS_CASE([x$use_libbluray],
 if test "$host_vendor" = "apple" ; then
   AC_CHECK_LIB([iconv],     [main],, AC_MSG_ERROR($missing_library))
   if test "$use_arch" != "arm"; then
-    AC_CHECK_LIB([SDL],      [main],, AC_MSG_ERROR($missing_library))
+    AC_CHECK_LIB([SDL2],      [main],, AC_MSG_ERROR($missing_library))
     AC_DEFINE([HAVE_SDL],[1],["Define to 1 if using sdl"])
   fi
 else
@@ -1090,10 +1090,10 @@ fi
     AC_DEFINE([HAVE_DBUS],[1],["Define to 1 if dbus is installed"]),
     AC_MSG_NOTICE($missing_library); use_dbus=no)
   if test "x$use_sdl" != "xno"; then
-    PKG_CHECK_MODULES([SDL],   [sdl],
+    PKG_CHECK_MODULES([SDL],   [sdl2],
       [INCLUDES="$INCLUDES $SDL_CFLAGS"; LIBS="$LIBS $SDL_LIBS"],
       AC_MSG_ERROR($missing_library))
-    AC_CHECK_LIB([SDL_image],  [main],, AC_MSG_ERROR($missing_library))
+    AC_CHECK_LIB([SDL2_image],  [main],, AC_MSG_ERROR($missing_library))
     AC_DEFINE([HAVE_SDL],[1],["Define to 1 if using sdl"])
   fi
 fi

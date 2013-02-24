@@ -60,13 +60,13 @@ public:
 protected:
   bool RefreshEGLContext();
 
+  SDL_Window* m_SDLWindow;
   SDL_Surface* m_SDLSurface;
   EGLDisplay   m_eglDisplay;
   EGLContext   m_eglContext;
   EGLContext   m_eglOMXContext;
   EGLSurface   m_eglSurface;
   Window       m_eglWindow;
-  Window       m_wmWindow;
   Display*     m_dpy;
 
   bool         m_bWasFullScreenBeforeMinimize;
