@@ -22,7 +22,7 @@
 
 #ifdef HAS_GLX
 
-#include <SDL/SDL_syswm.h>
+#include <SDL2/SDL_syswm.h>
 #include "WinSystemX11.h"
 #include "settings/Settings.h"
 #include "guilib/Texture.h"

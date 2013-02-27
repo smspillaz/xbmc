@@ -34,7 +34,7 @@
 #include <io.h>
 #endif
 #ifdef LIBVO_SDL
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #endif
 #include <inttypes.h>
 

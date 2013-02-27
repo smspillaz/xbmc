@@ -36,8 +36,8 @@
 
 #ifdef HAS_SDL_JOYSTICK
 
-#include <SDL/SDL_joystick.h>
-#include <SDL/SDL_events.h>
+#include <SDL2/SDL_joystick.h>
+#include <SDL2/SDL_events.h>
 
 #define MAX_AXES 64
 #define MAX_AXISAMOUNT 32768
@@ -58,7 +58,7 @@ public:
   bool GetButton (int& id, bool consider_repeat=true);
   bool GetAxis (int &id);
   bool GetHat (int &id, int &position, bool consider_repeat=true);
-  std::string GetJoystick() { return (m_JoyId>-1)?m_JoystickNames[m_JoyId]:""; }
+  std::string GetJoystick() { return m_ActiveJoystick ? m_ActiveJoystick : ""; }
   int GetAxisWithMaxAmount();
   float GetAmount(int axis);
   float GetAmount() { return GetAmount(m_AxisId); }
@@ -82,7 +82,7 @@ private:
   int m_ButtonId;
   uint8_t m_HatState;
   int m_HatId; 
-  int m_JoyId;
+  const char *m_ActiveJoystick;
   int m_NumAxes;
   int m_DeadzoneRange;
   bool m_joystickEnabled;

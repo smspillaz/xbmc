@@ -35,7 +35,7 @@
 #include "osx/CocoaInterface.h"
 #endif
 
-#if defined(_LINUX) && !defined(__APPLE__) && !defined(__ANDROID__)
+#if defined(_LINUX) && !defined(__APPLE__) && !defined(__ANDROID__) && HAVE_X11
 #include <X11/Xlib.h>
 #include <X11/XKBlib.h>
 #include "input/XBMC_keysym.h"
@@ -44,7 +44,7 @@
 
 PHANDLE_EVENT_FUNC CWinEventsBase::m_pEventFunc = NULL;
 
-#if defined(_LINUX) && !defined(__APPLE__)
+#if defined(_LINUX) && !defined(__APPLE__) && HAVE_X11
 // The following chunk of code is Linux specific. For keys that have
 // with keysym.sym set to zero it checks the scan code, and sets the sym
 // for some known scan codes. This is mostly the multimedia keys.
@@ -237,18 +237,43 @@ bool CWinEventsSDL::MessagePump()
         break;
 #endif
 
-      case SDL_ACTIVEEVENT:
+      case SDL_WINDOWEVENT:
         //If the window was inconified or restored
-        if( event.active.state & SDL_APPACTIVE )
+        if( event.window.event == SDL_WINDOWEVENT_RESTORED )
         {
-          g_application.m_AppActive = event.active.gain != 0;
+          g_application.m_AppActive = true;
           g_Windowing.NotifyAppActiveChange(g_application.m_AppActive);
         }
-        else if (event.active.state & SDL_APPINPUTFOCUS)
-      {
-        g_application.m_AppFocused = event.active.gain != 0;
-        g_Windowing.NotifyAppFocusChange(g_application.m_AppFocused);
-      }
+        else if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
+        {
+          g_application.m_AppActive = false;
+          g_Windowing.NotifyAppActiveChange(g_application.m_AppActive);
+        }
+        else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+        {
+          g_application.m_AppFocused = true;
+          g_Windowing.NotifyAppFocusChange(g_application.m_AppFocused);
+        }
+        else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+        {
+          g_application.m_AppFocused = false;
+          g_Windowing.NotifyAppFocusChange(g_application.m_AppFocused);
+        }
+        else if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+        {
+          XBMC_Event newEvent;
+          newEvent.type = XBMC_VIDEORESIZE;
+          newEvent.resize.w = event.window.data1;
+          newEvent.resize.h = event.window.data2;
+          ret |= g_application.OnEvent(newEvent);
+          g_windowManager.MarkDirty();
+          break;
+        }
+        else if (event.window.event == SDL_WINDOWEVENT_EXPOSED)
+        {
+          g_windowManager.MarkDirty();
+        }
+
       break;
 
       case SDL_KEYDOWN:
@@ -268,17 +293,15 @@ bool CWinEventsSDL::MessagePump()
         newEvent.key.keysym.sym = (XBMCKey) event.key.keysym.sym;
         newEvent.key.keysym.unicode = event.key.keysym.unicode;
         newEvent.key.state = event.key.state;
-        newEvent.key.type = event.key.type;
-        newEvent.key.which = event.key.which;
 
         // Check if the Windows keys are down because SDL doesn't flag this.
         uint16_t mod = event.key.keysym.mod;
-        uint8_t* keystate = SDL_GetKeyState(NULL);
-        if (keystate[SDLK_LSUPER] || keystate[SDLK_RSUPER])
+        SDL_Keymod keystate = SDL_GetModState();
+        if (keystate & KMOD_GUI)
           mod |= XBMCKMOD_LSUPER;
         newEvent.key.keysym.mod = (XBMCMod) mod;
 
-#if defined(_LINUX) && !defined(__APPLE__)
+#if defined(_LINUX) && !defined(__APPLE__) && HAVE_X11
         // If the keysym.sym is zero try to get it from the scan code
         if (newEvent.key.keysym.sym == 0)
           newEvent.key.keysym.sym = (XBMCKey) SymFromScancode(newEvent.key.keysym.scancode);
@@ -299,8 +322,6 @@ bool CWinEventsSDL::MessagePump()
         newEvent.key.keysym.mod =(XBMCMod) event.key.keysym.mod;
         newEvent.key.keysym.unicode = event.key.keysym.unicode;
         newEvent.key.state = event.key.state;
-        newEvent.key.type = event.key.type;
-        newEvent.key.which = event.key.which;
 
         ret |= g_application.OnEvent(newEvent);
         break;
@@ -312,8 +333,6 @@ bool CWinEventsSDL::MessagePump()
         newEvent.type = XBMC_MOUSEBUTTONDOWN;
         newEvent.button.button = event.button.button;
         newEvent.button.state = event.button.state;
-        newEvent.button.type = event.button.type;
-        newEvent.button.which = event.button.which;
         newEvent.button.x = event.button.x;
         newEvent.button.y = event.button.y;
 
@@ -327,8 +346,6 @@ bool CWinEventsSDL::MessagePump()
         newEvent.type = XBMC_MOUSEBUTTONUP;
         newEvent.button.button = event.button.button;
         newEvent.button.state = event.button.state;
-        newEvent.button.type = event.button.type;
-        newEvent.button.which = event.button.which;
         newEvent.button.x = event.button.x;
         newEvent.button.y = event.button.y;
 
@@ -338,7 +355,8 @@ bool CWinEventsSDL::MessagePump()
 
       case SDL_MOUSEMOTION:
       {
-        if (0 == (SDL_GetAppState() & SDL_APPMOUSEFOCUS))
+#if 0
+        if (0 == (SDL_GetWindowFlags() & SDL_APPMOUSEFOCUS))
         {
           g_Mouse.SetActive(false);
 #if defined(__APPLE__)
@@ -348,27 +366,17 @@ bool CWinEventsSDL::MessagePump()
 #endif
           break;
         }
+#endif
         XBMC_Event newEvent;
-        newEvent.type = XBMC_MOUSEMOTION;
+
+        newEvent.motion.type = XBMC_MOUSEMOTION;
         newEvent.motion.xrel = event.motion.xrel;
         newEvent.motion.yrel = event.motion.yrel;
         newEvent.motion.state = event.motion.state;
-        newEvent.motion.type = event.motion.type;
-        newEvent.motion.which = event.motion.which;
         newEvent.motion.x = event.motion.x;
         newEvent.motion.y = event.motion.y;
 
         ret |= g_application.OnEvent(newEvent);
-        break;
-      }
-      case SDL_VIDEORESIZE:
-      {
-        XBMC_Event newEvent;
-        newEvent.type = XBMC_VIDEORESIZE;
-        newEvent.resize.w = event.resize.w;
-        newEvent.resize.h = event.resize.h;
-        ret |= g_application.OnEvent(newEvent);
-        g_windowManager.MarkDirty();
         break;
       }
       case SDL_USEREVENT:
@@ -379,9 +387,6 @@ bool CWinEventsSDL::MessagePump()
         ret |= g_application.OnEvent(newEvent);
         break;
       }
-      case SDL_VIDEOEXPOSE:
-        g_windowManager.MarkDirty();
-        break;
     }
     memset(&event, 0, sizeof(XBMC_Event));
   }

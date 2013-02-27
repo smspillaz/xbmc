@@ -21,8 +21,8 @@
 #ifndef _SDL_ANIGIF_H
 #define _SDL_ANIGIF_H
 
-#include <SDL/SDL.h>
-#include <SDL/begin_code.h>
+#include <SDL2/SDL.h>
+#include <SDL2/begin_code.h>
 #ifdef __cplusplus
 	extern "C" {
 #endif
@@ -57,6 +57,6 @@ extern DECLSPEC int		AG_LoadGIF_RW( SDL_RWops* src, AG_Frame* frames, int size )
 #ifdef __cplusplus
 	}
 #endif
-#include <SDL/close_code.h>
+#include <SDL2/close_code.h>
 
 #endif /* _SDL_ANIGIF_H */

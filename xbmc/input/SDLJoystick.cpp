@@ -37,7 +37,7 @@ CJoystick::CJoystick()
   m_joystickEnabled = false;
   m_NumAxes = 0;
   m_AxisId = 0;
-  m_JoyId = 0;
+  m_ActiveJoystick = NULL;
   m_ButtonId = 0;
   m_HatId = 0;
   m_HatState = SDL_HAT_CENTERED;
@@ -65,11 +65,10 @@ void CJoystick::Initialize()
     for(size_t idJoy = 0; idJoy < m_Joysticks.size(); idJoy++)
     {
       // any joysticks unplugged?
-      if(SDL_JoystickOpened(idJoy))
-        SDL_JoystickClose(m_Joysticks[idJoy]);
+      SDL_JoystickClose(m_Joysticks[idJoy]);
     }
     m_Joysticks.clear();
-    m_JoyId = -1;
+    m_ActiveJoystick = NULL;
   }
 
   // Set deadzone range
@@ -97,8 +96,8 @@ void CJoystick::Initialize()
       m_Joysticks.push_back(joy);
       if (joy)
       {
-        m_JoystickNames.push_back(string(SDL_JoystickName(i)));
-        CLog::Log(LOGNOTICE, "Enabled Joystick: %s", SDL_JoystickName(i));
+        m_JoystickNames.push_back(string(SDL_JoystickName(joy)));
+        CLog::Log(LOGNOTICE, "Enabled Joystick: %s", SDL_JoystickName(joy));
         CLog::Log(LOGNOTICE, "Details: Total Axis: %d Total Hats: %d Total Buttons: %d",
             SDL_JoystickNumAxes(joy), SDL_JoystickNumHats(joy), SDL_JoystickNumButtons(joy));        
       }
@@ -156,7 +155,7 @@ void CJoystick::Update()
     {
       if (SDL_JoystickGetButton(joy, b))
       {
-        m_JoyId = SDL_JoystickIndex(joy);
+        m_ActiveJoystick = SDL_JoystickName (joy);
         buttonId = b+1;
         j = numj-1;
         break;
@@ -168,7 +167,7 @@ void CJoystick::Update()
       hatval = SDL_JoystickGetHat(joy, h);
       if (hatval != SDL_HAT_CENTERED)
       {
-        m_JoyId = SDL_JoystickIndex(joy);
+        m_ActiveJoystick = SDL_JoystickName (joy);
         hatId = h + 1;
         m_HatState = hatval;
         j = numj-1;
@@ -194,7 +193,7 @@ void CJoystick::Update()
     m_AxisId = GetAxisWithMaxAmount();
     if (m_AxisId)
     {
-      m_JoyId = SDL_JoystickIndex(joy);
+      m_ActiveJoystick = SDL_JoystickName (joy);
       j = numj-1;
       break;
     }
@@ -203,7 +202,7 @@ void CJoystick::Update()
   if(hatId==-1)
   {
     if(m_HatId!=0)
-      CLog::Log(LOGDEBUG, "Joystick %d hat %u Centered", m_JoyId, hatId);
+      CLog::Log(LOGDEBUG, "Joystick %s hat %u Centered", m_ActiveJoystick, hatId);
     m_pressTicksHat = 0;
     SetHatActive(false);
     m_HatId = 0;
@@ -212,7 +211,7 @@ void CJoystick::Update()
   {
     if(hatId!=m_HatId)
     {
-      CLog::Log(LOGDEBUG, "Joystick %d hat %u Down", m_JoyId, hatId);
+      CLog::Log(LOGDEBUG, "Joystick %s hat %u Down", m_ActiveJoystick, hatId);
       m_HatId = hatId;
       m_pressTicksHat = SDL_GetTicks();
     }
@@ -223,7 +222,7 @@ void CJoystick::Update()
   {
     if (m_ButtonId!=0)
     {
-      CLog::Log(LOGDEBUG, "Joystick %d button %d Up", m_JoyId, m_ButtonId);
+      CLog::Log(LOGDEBUG, "Joystick %s button %d Up", m_ActiveJoystick, m_ButtonId);
     }
     m_pressTicksButton = 0;
     SetButtonActive(false);
@@ -233,7 +232,7 @@ void CJoystick::Update()
   {
     if (buttonId!=m_ButtonId)
     {
-      CLog::Log(LOGDEBUG, "Joystick %d button %d Down", m_JoyId, buttonId);
+      CLog::Log(LOGDEBUG, "Joystick %s button %d Down", m_ActiveJoystick, buttonId);
       m_ButtonId = buttonId;
       m_pressTicksButton = SDL_GetTicks();
     }
@@ -256,7 +255,8 @@ void CJoystick::Update(SDL_Event& joyEvent)
   switch(joyEvent.type)
   {
   case SDL_JOYBUTTONDOWN:
-    m_JoyId = joyId = joyEvent.jbutton.which;
+    joyId = joyEvent.jbutton.which;
+    m_ActiveJoystick = SDL_JoystickNameForIndex(joyId);
     m_ButtonId = buttonId = joyEvent.jbutton.button + 1;
     m_pressTicksButton = SDL_GetTicks();
     SetButtonActive();
@@ -274,7 +274,7 @@ void CJoystick::Update(SDL_Event& joyEvent)
       break;
     }
     axis = true;
-    m_JoyId = joyId;
+    m_ActiveJoystick = SDL_JoystickNameForIndex(joyId);
     if (joyEvent.jaxis.value==0)
     {
       ignore = true;
@@ -285,16 +285,17 @@ void CJoystick::Update(SDL_Event& joyEvent)
       m_Amount[axisId] = joyEvent.jaxis.value; //[-32768 to 32767]
     }
     m_AxisId = GetAxisWithMaxAmount();
-    CLog::Log(LOGDEBUG, "Joystick %d Axis %d Amount %d", joyId, axisId, m_Amount[axisId]);
+    CLog::Log(LOGDEBUG, "Joystick %s Axis %d Amount %d", m_ActiveJoystick, axisId, m_Amount[axisId]);
     break;
 
   case SDL_JOYHATMOTION:
-    m_JoyId = joyId = joyEvent.jbutton.which;
+    joyId = joyEvent.jbutton.which;
+    m_ActiveJoystick = SDL_JoystickNameForIndex(joyId);
     m_HatId = joyEvent.jhat.hat + 1;
     m_pressTicksHat = SDL_GetTicks();
     m_HatState = joyEvent.jhat.value;
     SetHatActive(m_HatState != SDL_HAT_CENTERED);
-    CLog::Log(LOGDEBUG, "Joystick %d Hat %d Down with position %d", joyId, buttonId, m_HatState);
+    CLog::Log(LOGDEBUG, "Joystick %s Hat %d Down with position %d", m_ActiveJoystick, buttonId, m_HatState);
     break;
 
   case SDL_JOYBALLMOTION:

@@ -1,5 +1,5 @@
-#ifndef WINDOW_SYSTEM_EGL_H
-#define WINDOW_SYSTEM_EGL_H
+#ifndef WINDOW_SYSTEM_WAYLAND_H
+#define WINDOW_SYSTEM_WAYLAND_H
 
 #pragma once
 
@@ -24,15 +24,16 @@
  */
 #include "windowing/WinSystem.h"
 #include <EGL/egl.h>
-#include <X11/Xlib.h>
+#include <wayland-client.h>
+#include <wayland-egl.h>
 #include "rendering/gles/RenderSystemGLES.h"
 #include "utils/GlobalsHandling.h"
 
-class CWinSystemX11GLES : public CWinSystemBase, public CRenderSystemGLES
+class CWinSystemWayland : public CWinSystemBase, public CRenderSystemGLES
 {
 public:
-  CWinSystemX11GLES();
-  virtual ~CWinSystemX11GLES();
+  CWinSystemWayland();
+  virtual ~CWinSystemWayland();
 
   virtual bool InitWindowSystem();
   virtual bool DestroyWindowSystem();
@@ -62,12 +63,21 @@ protected:
 
   SDL_Window* m_SDLWindow;
   SDL_Surface* m_SDLSurface;
+  SDL_GLContext m_SDLGLContext;
   EGLDisplay   m_eglDisplay;
   EGLContext   m_eglContext;
   EGLContext   m_eglOMXContext;
   EGLSurface   m_eglSurface;
-  Window       m_eglWindow;
-  Display*     m_dpy;
+  struct wl_surface       *m_Surface;
+  struct wl_shell_surface *m_ShellSurface;
+  struct wl_egl_window    *m_WlEglWindow;
+  struct wl_display       *m_Dpy;
+  struct wl_registry      *m_Registry;
+  struct wl_compositor    *m_Compositor;
+  struct wl_output        *m_Output;
+  struct wl_shell         *m_Shell;
+
+  struct xkb_context      *m_XkbContext;
 
   bool         m_bWasFullScreenBeforeMinimize;
 
@@ -79,7 +89,7 @@ protected:
   int m_iVSyncErrors;
 };
 
-XBMC_GLOBAL_REF(CWinSystemX11GLES,g_Windowing);
-#define g_Windowing XBMC_GLOBAL_USE(CWinSystemX11GLES)
+XBMC_GLOBAL_REF(CWinSystemWayland,g_Windowing);
+#define g_Windowing XBMC_GLOBAL_USE(CWinSystemWayland)
 
 #endif // WINDOW_SYSTEM_H

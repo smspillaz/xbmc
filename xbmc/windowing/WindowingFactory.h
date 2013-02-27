@@ -29,6 +29,9 @@
 #elif defined(TARGET_WINDOWS) && defined(HAS_DX)
 #include "windows/WinSystemWin32DX.h"
 
+#elif defined(TARGET_LINUX)   && defined(HAS_GLES) && defined(HAVE_WAYLAND)
+#include "wayland/WinSystemWayland.h"
+
 #elif defined(TARGET_LINUX)   && defined(HAS_GL)   && defined(HAVE_X11)
 #include "X11/WinSystemX11GL.h"
 
