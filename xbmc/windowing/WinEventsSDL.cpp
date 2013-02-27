@@ -35,7 +35,7 @@
 #include "osx/CocoaInterface.h"
 #endif
 
-#if defined(_LINUX) && !defined(__APPLE__) && !defined(__ANDROID__)
+#if defined(_LINUX) && !defined(__APPLE__) && !defined(__ANDROID__) && HAVE_X11
 #include <X11/Xlib.h>
 #include <X11/XKBlib.h>
 #include "input/XBMC_keysym.h"
@@ -44,7 +44,7 @@
 
 PHANDLE_EVENT_FUNC CWinEventsBase::m_pEventFunc = NULL;
 
-#if defined(_LINUX) && !defined(__APPLE__)
+#if defined(_LINUX) && !defined(__APPLE__) && HAVE_X11
 // The following chunk of code is Linux specific. For keys that have
 // with keysym.sym set to zero it checks the scan code, and sets the sym
 // for some known scan codes. This is mostly the multimedia keys.
@@ -301,7 +301,7 @@ bool CWinEventsSDL::MessagePump()
           mod |= XBMCKMOD_LSUPER;
         newEvent.key.keysym.mod = (XBMCMod) mod;
 
-#if defined(_LINUX) && !defined(__APPLE__)
+#if defined(_LINUX) && !defined(__APPLE__) && HAVE_X11
         // If the keysym.sym is zero try to get it from the scan code
         if (newEvent.key.keysym.sym == 0)
           newEvent.key.keysym.sym = (XBMCKey) SymFromScancode(newEvent.key.keysym.scancode);
