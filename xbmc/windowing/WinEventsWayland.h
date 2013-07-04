@@ -17,28 +17,26 @@
 *  <http://www.gnu.org/licenses/>.
 *
 */
+
+#ifndef WINDOW_EVENTS_WAYLAND_H
+#define WINDOW_EVENTS_WAYLAND_H
+
 #pragma once
+#include "windowing/WinEvents.h"
 
-#ifndef WINDOW_EVENTS_SDL_H
-#define WINDOW_EVENTS_SDL_H
-
-#if defined (HAS_SDL) && !defined (HAVE_WAYLAND)
-#include <SDL/SDL_events.h>
-
-#include "WinEvents.h"
-
-class CWinEventsSDL : public CWinEventsBase
+class CWinEventsWayland : public CWinEventsBase
 {
 public:
+  CWinEventsWayland();
   static bool MessagePump();
+  static void RefreshDevices();
+  static bool IsRemoteLowBattery();
 
-protected:
-#ifdef TARGET_DARWIN
-  static bool ProcessOSXShortcuts(SDL_Event& event);
-#elif defined(TARGET_POSIX)
-  static bool ProcessLinuxShortcuts(SDL_Event& event);
-#endif
+  static void SetWaylandDisplay (struct wl_display *display);
+  static void DestroyWaylandDisplay ();
+
+  static void SetWaylandSeat (struct wl_seat *seat);
+  static void DestroyWaylandSeat ();
 };
 
 #endif
-#endif // WINDOW_EVENTS_SDL_H

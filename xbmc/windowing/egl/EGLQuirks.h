@@ -27,10 +27,15 @@
      where we have no control over the resolution, so we query it once the
      surface exists.
 */
-#define EGL_QUIRK_NEED_WINDOW_FOR_RES 1
+#define EGL_QUIRK_NEED_WINDOW_FOR_RES (1 << 0)
 
 /*! \brief Enable this if the implementation should have its native window
      destroyed when the surface is destroyed. In practice this means that a new
      native window will be created each time the main XBMC window is recreated.
 */
-#define EGL_QUIRK_DESTROY_NATIVE_WINDOW_WITH_SURFACE 2
+#define EGL_QUIRK_DESTROY_NATIVE_WINDOW_WITH_SURFACE (1 << 1)
+
+/*!  \brief Enable this if the implementation should control when SwapBuffers
+ *   is called. This is used on platforms that where the window system synchronizes
+ *   repaints across clients and can suspend client painting if it needs to */
+#define EGL_QUIRK_PLATFORM_CONTROLS_SWAPBUFFERS (1 << 2)

@@ -379,6 +379,12 @@ bool CWinSystemEGL::IsExtSupported(const char* extension)
 
 bool CWinSystemEGL::PresentRenderImpl(const CDirtyRegionList &dirty)
 {
+  int quirks;
+  m_egl->GetQuirks(&quirks);
+
+  if (quirks & EGL_QUIRK_PLATFORM_CONTROLS_SWAPBUFFERS)
+    m_egl->WaitForSwapBuffers();
+
   m_egl->SwapBuffers(m_display, m_surface);
   return true;
 }

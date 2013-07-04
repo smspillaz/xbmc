@@ -143,6 +143,15 @@ public:
     framebuffer */
   virtual bool  ShowWindow(bool show) = 0;
 
+/*! \brief Wait to call SwapBuffers
+
+    Wait until an appropriate time to call SwapBuffers. Needed by
+    some platforms to synchronize updates across clients and preserve
+    power.
+ */
+
+  virtual void WaitForSwapBuffers () {};
+
 protected:
   XBNativeDisplayType  m_nativeDisplay;
   XBNativeWindowType   m_nativeWindow;

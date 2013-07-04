@@ -19,7 +19,7 @@
 */
 
 #include "system.h"
-#ifdef HAS_SDL_WIN_EVENTS
+#if defined (HAS_SDL_WIN_EVENTS) && !defined (HAVE_WAYLAND)
 
 #include "WinEvents.h"
 #include "WinEventsSDL.h"
