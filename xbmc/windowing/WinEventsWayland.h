@@ -37,6 +37,8 @@ public:
 
   static void SetWaylandSeat (struct wl_seat *seat);
   static void DestroyWaylandSeat ();
+  
+  static void SetXBMCSurface(struct wl_surface *surf);
 };
 
 #endif

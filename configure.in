@@ -1316,6 +1316,9 @@ if test "$use_wayland" = "yes" && test "$host_vendor" != "apple"; then
   PKG_CHECK_MODULES([WAYLAND_EGL],    [wayland-egl],
     [INCLUDES="$INCLUDES $WAYLAND_EGL_CFLAGS"; LIBS="$LIBS $WAYLAND_EGL_LIBS"],
     AC_MSG_ERROR($missing_library))
+  PKG_CHECK_MODULES([XKBCOMMON],    [xkbcommon],
+    [INCLUDES="$INCLUDES $XKBCOMMON_CFLAGS"; LIBS="$LIBS $XKBCOMMON_LIBS"],
+    AC_MSG_ERROR($missing_library))
   AC_DEFINE([HAVE_WAYLAND], [1], [Define to 1 if you have Wayland libs installed.])
 else
   AC_MSG_RESULT($wayland_disabled)

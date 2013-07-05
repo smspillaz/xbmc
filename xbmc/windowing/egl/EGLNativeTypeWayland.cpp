@@ -873,6 +873,8 @@ public:
   std::auto_ptr <xw::Registry> registry;
   std::auto_ptr <xw::Compositor> compositor;
   std::auto_ptr <xw::Shell> shell;
+  
+  struct wl_seat *seatForInput;
 
   std::auto_ptr <xw::Surface> surface;
   std::auto_ptr <xw::ShellSurface> shellSurface;
@@ -903,6 +905,7 @@ private:
 };
 
 CEGLNativeTypeWayland::Private::Private() :
+  seatForInput(NULL),
   swapBuffersIsReady (false)
 {
 }
@@ -930,7 +933,7 @@ bool CEGLNativeTypeWayland::Private::OnShellAvailable (struct wl_shell *s)
 
 bool CEGLNativeTypeWayland::Private::OnSeatAvailable (struct wl_seat *s)
 {
-  CWinEventsWayland::SetWaylandSeat (s);
+  CWinEventsWayland::SetWaylandSeat(s);
   return true;
 }
 
@@ -1021,6 +1024,8 @@ bool CEGLNativeTypeWayland::CreateNativeWindow()
 
   priv->AddFrameCallback ();
   priv->WaitForSynchronize();
+
+  CWinEventsWayland::SetXBMCSurface(wls);
 
   return true;
 }
