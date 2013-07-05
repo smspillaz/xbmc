@@ -43,7 +43,7 @@ class WaylandRegistration
 {
 public:
 
-  virtual ~WaylandRegistration () {};
+  virtual ~WaylandRegistration() {};
 
   virtual bool OnCompositorAvailable(struct wl_compositor *) = 0;
   virtual bool OnShellAvailable(struct wl_shell *) = 0;
@@ -62,19 +62,19 @@ class Callback :
 {
 public:
 
-  typedef boost::function <void (uint32_t)> Func;
+  typedef boost::function<void(uint32_t)> Func;
 
-  Callback (struct wl_callback *callback,
-            const Func &func);
-  ~Callback ();
+  Callback(struct wl_callback *callback,
+           const Func &func);
+  ~Callback();
 
-  struct wl_callback * GetWlCallback ();
+  struct wl_callback * GetWlCallback();
 
   static const struct wl_callback_listener listener;
 
-  static void OnCallback (void *,
-                          struct wl_callback *,
-                          uint32_t);
+  static void OnCallback(void *,
+                         struct wl_callback *,
+                         uint32_t);
 
 private:
 
@@ -112,10 +112,10 @@ class Display :
 {
   public:
 
-    Display ();
-    ~Display ();
+    Display();
+    ~Display();
 
-    struct wl_display * GetWlDisplay ();
+    struct wl_display * GetWlDisplay();
     struct wl_callback * Sync();
 
   private:
@@ -128,11 +128,11 @@ class Registry :
 {
 public:
 
-  Registry (struct wl_display   *,
-            WaylandRegistration &);
-  ~Registry ();
+  Registry(struct wl_display   *,
+           WaylandRegistration &);
+  ~Registry();
 
-  struct wl_registry * GetWlRegistry ();
+  struct wl_registry * GetWlRegistry();
 
   static void HandleGlobalCallback(void *, struct wl_registry *,
                                    uint32_t, const char *, uint32_t);
@@ -152,15 +152,15 @@ private:
   struct wl_registry *registry;
   WaylandRegistration &registration;
 
-  void HandleGlobal (uint32_t, const char *, uint32_t);
-  void HandleRemoveGlobal (uint32_t);
+  void HandleGlobal(uint32_t, const char *, uint32_t);
+  void HandleRemoveGlobal(uint32_t);
 };
 
-const std::string Registry::CompositorName ("wl_compositor");
-const std::string Registry::ShellName ("wl_shell");
-const std::string Registry::SeatName ("wl_seat");
-const std::string Registry::ShmName ("wl_shm");
-const std::string Registry::OutputName ("wl_output");
+const std::string Registry::CompositorName("wl_compositor");
+const std::string Registry::ShellName("wl_shell");
+const std::string Registry::SeatName("wl_seat");
+const std::string Registry::ShmName("wl_shm");
+const std::string Registry::OutputName("wl_output");
 
 const struct wl_registry_listener Registry::listener =
 {
@@ -173,11 +173,11 @@ class Compositor :
 {
 public:
 
-  Compositor (struct wl_compositor *);
-  ~Compositor ();
+  Compositor(struct wl_compositor *);
+  ~Compositor();
 
-  struct wl_compositor * GetWlCompositor ();
-  struct wl_surface * CreateSurface ();
+  struct wl_compositor * GetWlCompositor();
+  struct wl_surface * CreateSurface();
   struct wl_region * CreateRegion();
 
 private:
@@ -190,11 +190,11 @@ class Shell :
 {
 public:
 
-  Shell (struct wl_shell *);
-  ~Shell ();
+  Shell(struct wl_shell *);
+  ~Shell();
 
-  struct wl_shell * GetWlShell ();
-  struct wl_shell_surface * CreateShellSurface (struct wl_surface *);
+  struct wl_shell * GetWlShell();
+  struct wl_shell_surface * CreateShellSurface(struct wl_surface *);
 
 private:
 
@@ -206,8 +206,8 @@ struct Output :
 {
 public:
 
-  Output (struct wl_output *);
-  ~Output ();
+  Output(struct wl_output *);
+  ~Output();
 
   struct ModeGeometry
   {
@@ -226,7 +226,7 @@ public:
     enum wl_output_transform outputTransformation;
   };
 
-  struct wl_output * GetWlOutput ();
+  struct wl_output * GetWlOutput();
 
   const ModeGeometry & CurrentMode();
   const ModeGeometry & PreferredMode();
@@ -301,13 +301,13 @@ class Surface :
 {
 public:
 
-  Surface (struct wl_surface *);
-  ~Surface ();
+  Surface(struct wl_surface *);
+  ~Surface();
 
-  struct wl_surface * GetWlSurface ();
-  struct wl_callback * CreateFrameCallback ();
-  void SetOpaqueRegion (struct wl_region *region);
-  void Commit ();
+  struct wl_surface * GetWlSurface();
+  struct wl_callback * CreateFrameCallback();
+  void SetOpaqueRegion(struct wl_region *region);
+  void Commit();
 
 private:
 
@@ -319,34 +319,34 @@ class ShellSurface :
 {
 public:
 
-  ShellSurface (struct wl_shell_surface *);
-  ~ShellSurface ();
+  ShellSurface(struct wl_shell_surface *);
+  ~ShellSurface();
 
-  struct wl_shell_surface * GetWlShellSurface ();
+  struct wl_shell_surface * GetWlShellSurface();
   void SetFullscreen(enum wl_shell_surface_fullscreen_method method,
                      uint32_t framerate,
                      struct wl_output *output);
 
   static const wl_shell_surface_listener listener;
 
-  static void HandlePingCallback (void *,
-                                  struct wl_shell_surface *,
-                                  uint32_t);
-  static void HandleConfigureCallback (void *,
-                                       struct wl_shell_surface *,
-                                       uint32_t,
-                                       int32_t,
-                                       int32_t);
-  static void HandlePopupDoneCallback (void *,
-                                       struct wl_shell_surface *);
+  static void HandlePingCallback(void *,
+                                 struct wl_shell_surface *,
+                                 uint32_t);
+  static void HandleConfigureCallback(void *,
+                                      struct wl_shell_surface *,
+                                      uint32_t,
+                                      int32_t,
+                                      int32_t);
+  static void HandlePopupDoneCallback(void *,
+                                      struct wl_shell_surface *);
 
 private:
 
-  void HandlePing (uint32_t serial);
-  void HandleConfigure (uint32_t edges,
-                        int32_t width,
-                        int32_t height);
-  void HandlePopupDone ();
+  void HandlePing(uint32_t serial);
+  void HandleConfigure(uint32_t edges,
+                       int32_t width,
+                       int32_t height);
+  void HandlePopupDone();
 
   struct wl_shell_surface *shell_surface;
 };
@@ -363,12 +363,12 @@ class OpenGLSurface :
 {
 public:
 
-  OpenGLSurface (struct wl_surface *surface,
-                 int32_t width,
-                 int32_t height);
-  ~OpenGLSurface ();
+  OpenGLSurface(struct wl_surface *surface,
+                int32_t width,
+                int32_t height);
+  ~OpenGLSurface();
 
-  struct wl_egl_window * GetWlEglWindow ();
+  struct wl_egl_window * GetWlEglWindow();
   void Resize(int width, int height);
 
 private:
@@ -383,7 +383,7 @@ private:
 namespace xw = xbmc::wayland;
 
 xw::Region::Region(struct wl_region *region) :
-  region (region)
+  region(region)
 {
 }
 
@@ -407,19 +407,19 @@ xw::Region::AddRectangle(int32_t x,
   wl_region_add(region, x, y, width, height);
 }
 
-xw::Callback::Callback (struct wl_callback *callback,
-                        const Func &func) :
-  callback (callback),
-  func (func)
+xw::Callback::Callback(struct wl_callback *callback,
+                       const Func &func) :
+  callback(callback),
+  func(func)
 {
-  wl_callback_add_listener (callback,
-                            &listener,
-                            this);
+  wl_callback_add_listener(callback,
+                           &listener,
+                           this);
 }
 
-xw::Callback::~Callback ()
+xw::Callback::~Callback()
 {
-  wl_callback_destroy (callback);
+  wl_callback_destroy(callback);
 }
 
 struct wl_callback *
@@ -433,29 +433,29 @@ xw::Callback::OnCallback(void *data,
                          struct wl_callback *callback,
                          uint32_t time)
 {
-  static_cast <Callback *> (data)->func (time);
+  static_cast<Callback *>(data)->func(time);
 }
 
-xw::Display::Display () :
-  display (wl_display_connect (NULL))
+xw::Display::Display() :
+  display(wl_display_connect(NULL))
 {
   if (!display)
   {
     std::stringstream ss;
     ss << "Failed to connect to "
        << getenv("WAYLAND_DISPLAY");
-    throw std::runtime_error(ss.str ());
+    throw std::runtime_error(ss.str());
   }
 }
 
-xw::Display::~Display ()
+xw::Display::~Display()
 {
-  wl_display_flush (display);
-  wl_display_disconnect (display);
+  wl_display_flush(display);
+  wl_display_disconnect(display);
 }
 
 struct wl_display *
-xw::Display::GetWlDisplay ()
+xw::Display::GetWlDisplay()
 {
   return display;
 }
@@ -466,102 +466,102 @@ xw::Display::Sync()
   return wl_display_sync(display);
 }
 
-xw::Registry::Registry (struct wl_display   *display,
-                        WaylandRegistration &registration) :
-  registry (wl_display_get_registry (display)),
-  registration (registration)
+xw::Registry::Registry(struct wl_display   *display,
+                       WaylandRegistration &registration) :
+  registry(wl_display_get_registry(display)),
+  registration(registration)
 {
-  wl_registry_add_listener (registry, &listener, this);
+  wl_registry_add_listener(registry, &listener, this);
 }
 
-xw::Registry::~Registry ()
+xw::Registry::~Registry()
 {
-  wl_registry_destroy (registry);
+  wl_registry_destroy(registry);
 }
 
 void
-xw::Registry::HandleGlobal (uint32_t name,
-                            const char *interface,
-                            uint32_t version)
+xw::Registry::HandleGlobal(uint32_t name,
+                           const char *interface,
+                           uint32_t version)
 {
   if (interface == CompositorName)
   {
     struct wl_compositor *compositor =
-      static_cast <struct wl_compositor *> (wl_registry_bind (registry,
-                                                              name,
-                                                              &wl_compositor_interface,
-                                                              1));
-    registration.OnCompositorAvailable (compositor);
+      static_cast<struct wl_compositor *>(wl_registry_bind(registry,
+                                                           name,
+                                                           &wl_compositor_interface,
+                                                           1));
+    registration.OnCompositorAvailable(compositor);
   }
   else if (interface == ShellName)
   {
     struct wl_shell *shell =
-      static_cast <struct wl_shell *> (wl_registry_bind (registry,
-                                                         name,
-                                                         &wl_shell_interface,
-                                                         1));
-    registration.OnShellAvailable (shell);
+      static_cast<struct wl_shell *>(wl_registry_bind(registry,
+                                                      name,
+                                                      &wl_shell_interface,
+                                                      1));
+    registration.OnShellAvailable(shell);
   }
   else if (interface == SeatName)
   {
     struct wl_seat *seat =
-      static_cast <struct wl_seat *> (wl_registry_bind (registry,
-                                                        name,
-                                                        &wl_seat_interface,
-                                                        1));
-    registration.OnSeatAvailable (seat);
+      static_cast<struct wl_seat *>(wl_registry_bind(registry,
+                                                     name,
+                                                     &wl_seat_interface,
+                                                     1));
+    registration.OnSeatAvailable(seat);
   }
   else if (interface == ShmName)
   {
     struct wl_shm *shm =
-      static_cast <struct wl_shm *> (wl_registry_bind (registry,
-                                                       name,
-                                                       &wl_shm_interface,
-                                                       1));
-    registration.OnShmAvailable (shm);
+      static_cast<struct wl_shm *>(wl_registry_bind(registry,
+                                                    name,
+                                                    &wl_shm_interface,
+                                                    1));
+    registration.OnShmAvailable(shm);
   }
   else if (interface == OutputName)
   {
     struct wl_output *output =
-      static_cast <struct wl_output *> (wl_registry_bind (registry,
-                                                          name,
-                                                          &wl_output_interface,
-                                                          1));
+      static_cast<struct wl_output *>(wl_registry_bind(registry,
+                                                       name,
+                                                       &wl_output_interface,
+                                                       1));
     registration.OnOutputAvailable(output);
   }
 }
 
 void
-xw::Registry::HandleRemoveGlobal (uint32_t name)
+xw::Registry::HandleRemoveGlobal(uint32_t name)
 {
 }
 
 void
-xw::Registry::HandleGlobalCallback (void *data,
-                                    struct wl_registry *registry,
-                                    uint32_t name,
-                                    const char *interface,
-                                    uint32_t version)
+xw::Registry::HandleGlobalCallback(void *data,
+                                   struct wl_registry *registry,
+                                   uint32_t name,
+                                   const char *interface,
+                                   uint32_t version)
 {
-  static_cast <Registry *> (data)->HandleGlobal (name, interface, version);
+  static_cast<Registry *>(data)->HandleGlobal(name, interface, version);
 }
 
 void
-xw::Registry::HandleRemoveGlobalCallback (void *data,
-                                          struct wl_registry *registry,
-                                          uint32_t name)
+xw::Registry::HandleRemoveGlobalCallback(void *data,
+                                         struct wl_registry *registry,
+                                         uint32_t name)
 {
-  static_cast <Registry *> (data)->HandleRemoveGlobal (name);
+  static_cast<Registry *>(data)->HandleRemoveGlobal(name);
 }
 
-xw::Compositor::Compositor (struct wl_compositor *compositor) :
-  compositor (compositor)
+xw::Compositor::Compositor(struct wl_compositor *compositor) :
+  compositor(compositor)
 {
 }
 
-xw::Compositor::~Compositor ()
+xw::Compositor::~Compositor()
 {
-  wl_compositor_destroy (compositor);
+  wl_compositor_destroy(compositor);
 }
 
 struct wl_compositor *
@@ -573,7 +573,7 @@ xw::Compositor::GetWlCompositor()
 struct wl_surface *
 xw::Compositor::CreateSurface()
 {
-  return wl_compositor_create_surface (compositor);
+  return wl_compositor_create_surface(compositor);
 }
 
 struct wl_region *
@@ -582,14 +582,14 @@ xw::Compositor::CreateRegion()
   return wl_compositor_create_region(compositor);
 }
 
-xw::Shell::Shell (struct wl_shell *shell) :
-  shell (shell)
+xw::Shell::Shell(struct wl_shell *shell) :
+  shell(shell)
 {
 }
 
 xw::Shell::~Shell()
 {
-  wl_shell_destroy (shell);
+  wl_shell_destroy(shell);
 }
 
 struct wl_shell *
@@ -601,7 +601,7 @@ xw::Shell::GetWlShell()
 struct wl_shell_surface *
 xw::Shell::CreateShellSurface(struct wl_surface *surface)
 {
-  return wl_shell_get_shell_surface (shell, surface);
+  return wl_shell_get_shell_surface(shell, surface);
 }
 
 xw::Output::Output(struct wl_output *output) :
@@ -630,8 +630,8 @@ const xw::Output::ModeGeometry &
 xw::Output::CurrentMode()
 {
   if (!current)
-	throw std::logic_error ("No current mode has been set by the server"
-                             " yet");
+	throw std::logic_error("No current mode has been set by the server"
+                           " yet");
   
   return *current;
 }
@@ -640,8 +640,8 @@ const xw::Output::ModeGeometry &
 xw::Output::PreferredMode()
 {
   if (!preferred)
-    throw std::logic_error ("No preferred mode has been set by the "
-                            " server yet");
+    throw std::logic_error("No preferred mode has been set by the "
+                           " server yet");
 
   return *preferred;
 }
@@ -676,14 +676,14 @@ xw::Output::GeometryCallback(void *data,
                              const char *model,
                              int32_t transform)
 {
-  return static_cast <xw::Output *> (data)->Geometry(x,
-                                                     y,
-                                                     physicalWidth,
-                                                     physicalHeight,
-                                                     subpixelArrangement,
-                                                     make,
-                                                     model,
-                                                     transform);
+  return static_cast<xw::Output *>(data)->Geometry(x,
+                                                   y,
+                                                   physicalWidth,
+                                                   physicalHeight,
+                                                   subpixelArrangement,
+                                                   make,
+                                                   model,
+                                                   transform);
 }
 
 void
@@ -694,17 +694,17 @@ xw::Output::ModeCallback(void *data,
                          int32_t height,
                          int32_t refresh)
 {
-  return static_cast <xw::Output *>(data)->Mode(flags,
-                                                width,
-                                                height,
-                                                refresh);
+  return static_cast<xw::Output *>(data)->Mode(flags,
+                                               width,
+                                               height,
+                                               refresh);
 }
 
 void
 xw::Output::DoneCallback(void *data,
                          struct wl_output *output)
 {
-  return static_cast <xw::Output *>(data)->Done();
+  return static_cast<xw::Output *>(data)->Done();
 }
 
 void
@@ -712,7 +712,7 @@ xw::Output::ScaleCallback(void *data,
                           struct wl_output *output,
                           int32_t factor)
 {
-  return static_cast <xw::Output *>(data)->Scale(factor);
+  return static_cast<xw::Output *>(data)->Scale(factor);
 }
 
 void
@@ -730,9 +730,9 @@ xw::Output::Geometry(int32_t x,
   geometry.physicalWidth = physicalWidth;
   geometry.physicalHeight = physicalHeight;
   geometry.subpixelArrangement =
-    static_cast <enum wl_output_subpixel>(subpixelArrangement);
+    static_cast<enum wl_output_subpixel>(subpixelArrangement);
   geometry.outputTransformation =
-    static_cast <enum wl_output_transform>(transform);
+    static_cast<enum wl_output_transform>(transform);
 }
 
 void
@@ -743,8 +743,8 @@ xw::Output::Mode(uint32_t flags,
 {
   xw::Output::ModeGeometry *update = NULL;
   
-  for (std::vector <ModeGeometry>::iterator it = modes.begin();
-       it != modes.end ();
+  for (std::vector<ModeGeometry>::iterator it = modes.begin();
+       it != modes.end();
        ++it)
   { 
     if (it->width == width &&
@@ -757,7 +757,7 @@ xw::Output::Mode(uint32_t flags,
   }
   
   enum wl_output_mode outputFlags =
-    static_cast <enum wl_output_mode> (flags);
+    static_cast<enum wl_output_mode>(flags);
   
   if (!update)
   {
@@ -789,14 +789,14 @@ xw::Output::Scale(int32_t factor)
   scaleFactor = factor;
 }
 
-xw::Surface::Surface (struct wl_surface *surface) :
-  surface (surface)
+xw::Surface::Surface(struct wl_surface *surface) :
+  surface(surface)
 {
 }
 
-xw::Surface::~Surface ()
+xw::Surface::~Surface()
 {
-  wl_surface_destroy (surface);
+  wl_surface_destroy(surface);
 }
 
 struct wl_surface *
@@ -808,7 +808,7 @@ xw::Surface::GetWlSurface()
 struct wl_callback *
 xw::Surface::CreateFrameCallback()
 {
-  return wl_surface_frame (surface);
+  return wl_surface_frame(surface);
 }
 
 void
@@ -823,17 +823,17 @@ xw::Surface::Commit()
   wl_surface_commit(surface);
 }
 
-xw::ShellSurface::ShellSurface (struct wl_shell_surface *shell_surface) :
-  shell_surface (shell_surface)
+xw::ShellSurface::ShellSurface(struct wl_shell_surface *shell_surface) :
+  shell_surface(shell_surface)
 {
-  wl_shell_surface_add_listener (shell_surface,
-                                 &listener,
-                                 this);
+  wl_shell_surface_add_listener(shell_surface,
+                                &listener,
+                                this);
 }
 
 xw::ShellSurface::~ShellSurface()
 {
-  wl_shell_surface_destroy (shell_surface);
+  wl_shell_surface_destroy(shell_surface);
 }
 
 struct wl_shell_surface *
@@ -858,7 +858,7 @@ xw::ShellSurface::HandlePingCallback(void *data,
                                      struct wl_shell_surface *shell_surface,
                                      uint32_t serial)
 {
-  return static_cast <ShellSurface *> (data)->HandlePing (serial);
+  return static_cast<ShellSurface *>(data)->HandlePing(serial);
 }
 
 void
@@ -868,22 +868,22 @@ xw::ShellSurface::HandleConfigureCallback(void *data,
                                           int32_t width,
                                           int32_t height)
 {
-  return static_cast <ShellSurface *> (data)->HandleConfigure (edges,
-                                                               width,
-                                                               height);
+  return static_cast<ShellSurface *>(data)->HandleConfigure(edges,
+                                                            width,
+                                                            height);
 }
 
 void
 xw::ShellSurface::HandlePopupDoneCallback(void *data,
                                           struct wl_shell_surface *shell_surface)
 {
-  return static_cast <ShellSurface *> (data)->HandlePopupDone();
+  return static_cast<ShellSurface *>(data)->HandlePopupDone();
 }
 
 void
 xw::ShellSurface::HandlePing(uint32_t serial)
 {
-  wl_shell_surface_pong (shell_surface, serial);
+  wl_shell_surface_pong(shell_surface, serial);
 }
 
 void
@@ -898,18 +898,18 @@ xw::ShellSurface::HandlePopupDone()
 {
 }
 
-xw::OpenGLSurface::OpenGLSurface (struct wl_surface *surface,
-                                  int width,
-                                  int height) :
-  egl_window (wl_egl_window_create (surface,
-                                    width,
-                                    height))
+xw::OpenGLSurface::OpenGLSurface(struct wl_surface *surface,
+                                 int width,
+                                 int height) :
+  egl_window(wl_egl_window_create(surface,
+                                  width,
+                                  height))
 {
 }
 
 xw::OpenGLSurface::~OpenGLSurface()
 {
-  wl_egl_window_destroy (egl_window);
+  wl_egl_window_destroy(egl_window);
 }
 
 struct wl_egl_window *
@@ -933,17 +933,17 @@ class CEGLNativeTypeWayland::Private :
 {
 public:
 
-  std::auto_ptr <xw::Display> display;
-  std::auto_ptr <xw::Registry> registry;
-  std::auto_ptr <xw::Compositor> compositor;
-  std::auto_ptr <xw::Shell> shell;
+  std::auto_ptr<xw::Display> display;
+  std::auto_ptr<xw::Registry> registry;
+  std::auto_ptr<xw::Compositor> compositor;
+  std::auto_ptr<xw::Shell> shell;
 
-  std::auto_ptr <xw::Surface> surface;
-  std::auto_ptr <xw::ShellSurface> shellSurface;
-  std::auto_ptr <xw::OpenGLSurface> glSurface;
-  std::auto_ptr <xw::Callback> frameCallback;
+  std::auto_ptr<xw::Surface> surface;
+  std::auto_ptr<xw::ShellSurface> shellSurface;
+  std::auto_ptr<xw::OpenGLSurface> glSurface;
+  std::auto_ptr<xw::Callback> frameCallback;
   
-  std::vector <boost::shared_ptr <xw::Output> > outputs;
+  std::vector<boost::shared_ptr <xw::Output> > outputs;
 
   void AddFrameCallback();
   void WaitForSynchronize();
@@ -951,7 +951,7 @@ public:
 private:
 
   bool synchronized;
-  std::auto_ptr <xw::Callback> synchronizeCallback;
+  std::auto_ptr<xw::Callback> synchronizeCallback;
   
   void Synchronize();
 
@@ -965,7 +965,7 @@ private:
 };
 
 CEGLNativeTypeWayland::CEGLNativeTypeWayland() :
-  priv (new Private ())
+  priv(new Private())
 {
 }
 
@@ -973,32 +973,32 @@ CEGLNativeTypeWayland::~CEGLNativeTypeWayland()
 {
 } 
 
-bool CEGLNativeTypeWayland::Private::OnCompositorAvailable (struct wl_compositor *c)
+bool CEGLNativeTypeWayland::Private::OnCompositorAvailable(struct wl_compositor *c)
 {
-  compositor.reset (new xw::Compositor (c));
+  compositor.reset(new xw::Compositor(c));
   return true;
 }
 
-bool CEGLNativeTypeWayland::Private::OnShellAvailable (struct wl_shell *s)
+bool CEGLNativeTypeWayland::Private::OnShellAvailable(struct wl_shell *s)
 {
-  shell.reset (new xw::Shell (s));
+  shell.reset(new xw::Shell(s));
   return true;
 }
 
-bool CEGLNativeTypeWayland::Private::OnSeatAvailable (struct wl_seat *s)
+bool CEGLNativeTypeWayland::Private::OnSeatAvailable(struct wl_seat *s)
 {
   CWinEventsWayland::SetWaylandSeat(s);
   return true;
 }
 
-bool CEGLNativeTypeWayland::Private::OnShmAvailable (struct wl_shm *s)
+bool CEGLNativeTypeWayland::Private::OnShmAvailable(struct wl_shm *s)
 {
   return true;
 }
 
 bool CEGLNativeTypeWayland::Private::OnOutputAvailable(struct wl_output *o)
 {
-  outputs.push_back(boost::shared_ptr <xw::Output> (new xw::Output (o)));
+  outputs.push_back(boost::shared_ptr<xw::Output>(new xw::Output(o)));
   WaitForSynchronize();
   return true;
 }
@@ -1035,25 +1035,26 @@ void CEGLNativeTypeWayland::Initialize()
 
 void CEGLNativeTypeWayland::Destroy()
 {
-  priv->registry.reset ();
-  priv->display.reset ();
+  priv->registry.reset();
+  priv->display.reset();
 }
 
 bool CEGLNativeTypeWayland::CreateNativeDisplay()
 {
   try
   {
-    priv->display.reset (new xw::Display ());
+    priv->display.reset(new xw::Display());
   }
   catch (const std::runtime_error &err)
   {
-    std::cout << err.what ();
+	/* TODO: Use CLog */
+    std::cout << err.what();
   }
 
-  priv->registry.reset (new xw::Registry (priv->display->GetWlDisplay (),
-                                          *priv));
+  priv->registry.reset(new xw::Registry(priv->display->GetWlDisplay(),
+                                        *priv));
 
-  CWinEventsWayland::SetWaylandDisplay (priv->display->GetWlDisplay());
+  CWinEventsWayland::SetWaylandDisplay(priv->display->GetWlDisplay());
   priv->WaitForSynchronize();
 
   return true;
@@ -1061,20 +1062,21 @@ bool CEGLNativeTypeWayland::CreateNativeDisplay()
 
 bool CEGLNativeTypeWayland::CreateNativeWindow()
 {
-  struct wl_surface *wls = priv->compositor->CreateSurface ();
-  xw::Surface *s = new xw::Surface (wls);
-  priv->surface.reset (s);
+  struct wl_surface *wls = priv->compositor->CreateSurface();
+  xw::Surface *s = new xw::Surface(wls);
+  priv->surface.reset(s);
 
-  xw::ShellSurface *ss = new xw::ShellSurface (priv->shell->CreateShellSurface (wls));
-  priv->shellSurface.reset (ss);
+  xw::ShellSurface *ss =
+    new xw::ShellSurface(priv->shell->CreateShellSurface(wls));
+  priv->shellSurface.reset(ss);
 
   /* Supporting nly the first output device at the moment */
   const xw::Output::ModeGeometry &current(priv->outputs[0]->CurrentMode());
 
-  xw::OpenGLSurface *os = new xw::OpenGLSurface (wls,
-                                                 current.width,
-                                                 current.height);
-  priv->glSurface.reset (os);
+  xw::OpenGLSurface *os = new xw::OpenGLSurface(wls,
+                                                current.width,
+                                                current.height);
+  priv->glSurface.reset(os);
   
   xw::Region region(priv->compositor->CreateRegion());
   
@@ -1083,7 +1085,7 @@ bool CEGLNativeTypeWayland::CreateNativeWindow()
   priv->surface->SetOpaqueRegion(region.GetWlRegion());
   priv->surface->Commit();
 
-  priv->AddFrameCallback ();
+  priv->AddFrameCallback();
   priv->WaitForSynchronize();
 
   CWinEventsWayland::SetXBMCSurface(wls);
@@ -1094,38 +1096,38 @@ bool CEGLNativeTypeWayland::CreateNativeWindow()
 bool CEGLNativeTypeWayland::GetNativeDisplay(XBNativeDisplayType **nativeDisplay) const
 {
   *nativeDisplay =
-      reinterpret_cast <XBNativeDisplayType *> (priv->display.get ());
+      reinterpret_cast <XBNativeDisplayType *>(priv->display.get());
   return true;
 }
 
 bool CEGLNativeTypeWayland::GetNativeWindow(XBNativeDisplayType **nativeWindow) const
 {
   *nativeWindow =
-      reinterpret_cast <XBNativeWindowType *> (priv->glSurface.get ());
+      reinterpret_cast <XBNativeWindowType *>(priv->glSurface.get());
   return true;
 }  
 
 bool CEGLNativeTypeWayland::DestroyNativeDisplay()
 {
-  CWinEventsWayland::DestroyWaylandSeat ();
-  CWinEventsWayland::DestroyWaylandDisplay ();
+  CWinEventsWayland::DestroyWaylandSeat();
+  CWinEventsWayland::DestroyWaylandDisplay();
 
-  priv->shell.reset ();
-  priv->outputs.clear ();
-  priv->compositor.reset ();
+  priv->shell.reset();
+  priv->outputs.clear();
+  priv->compositor.reset();
   
   priv->WaitForSynchronize();
   
-  priv->display.reset ();
+  priv->display.reset();
   return true;
 }
 
 bool CEGLNativeTypeWayland::DestroyNativeWindow()
 {
-  priv->glSurface.reset ();
-  priv->shellSurface.reset ();
-  priv->surface.reset ();
-  priv->frameCallback.reset ();
+  priv->glSurface.reset();
+  priv->shellSurface.reset();
+  priv->surface.reset();
+  priv->frameCallback.reset();
   return true;  
 }
 
@@ -1140,14 +1142,14 @@ void ResolutionInfoForMode(const xw::Output::ModeGeometry &mode,
   res->dwFlags = D3DPRESENTFLAG_PROGRESSIVE;
   res->iScreen = 0;
   res->bFullScreen = true;
-  res->iSubtitles = static_cast <int> (0.965 * res->iHeight);
+  res->iSubtitles = static_cast<int>(0.965 * res->iHeight);
   res->fPixelRatio = 1.0f;
   res->iScreenWidth = res->iWidth;
   res->iScreenHeight = res->iHeight;
-  res->strMode.Format ("%dx%d @ %.2fp",
-                       res->iScreenWidth,
-                       res->iScreenHeight,
-                       res->fRefreshRate);
+  res->strMode.Format("%dx%d @ %.2fp",
+                      res->iScreenWidth,
+                      res->iScreenHeight,
+                      res->fRefreshRate);
 }
 }
 
@@ -1215,13 +1217,13 @@ bool CEGLNativeTypeWayland::ShowWindow(bool show)
 
 void CEGLNativeTypeWayland::Private::OnFrameCallback(uint32_t time)
 {
-  AddFrameCallback ();
+  AddFrameCallback();
 }
 
 void CEGLNativeTypeWayland::Private::AddFrameCallback()
 {
-  frameCallback.reset (new xw::Callback (surface->CreateFrameCallback(),
-                                         boost::bind (&CEGLNativeTypeWayland::Private::OnFrameCallback,
-                                                      this,
-                                                      _1)));
+  frameCallback.reset(new xw::Callback(surface->CreateFrameCallback(),
+                                       boost::bind(&CEGLNativeTypeWayland::Private::OnFrameCallback,
+                                                   this,
+                                                   _1)));
 }

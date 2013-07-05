@@ -32,11 +32,11 @@ public:
   static void RefreshDevices();
   static bool IsRemoteLowBattery();
 
-  static void SetWaylandDisplay (struct wl_display *display);
-  static void DestroyWaylandDisplay ();
+  static void SetWaylandDisplay(struct wl_display *display);
+  static void DestroyWaylandDisplay();
 
-  static void SetWaylandSeat (struct wl_seat *seat);
-  static void DestroyWaylandSeat ();
+  static void SetWaylandSeat(struct wl_seat *seat);
+  static void DestroyWaylandSeat();
   
   static void SetXBMCSurface(struct wl_surface *surf);
 };

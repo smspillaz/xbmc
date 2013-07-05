@@ -47,30 +47,30 @@ class InputReciever
 {
 public:
 
-  virtual ~InputReciever () {}
+  virtual ~InputReciever() {}
 
-  virtual bool InsertPointer (struct wl_pointer *pointer) = 0;
-  virtual bool InsertKeyboard (struct wl_keyboard *keyboard) = 0;
+  virtual bool InsertPointer(struct wl_pointer *pointer) = 0;
+  virtual bool InsertKeyboard(struct wl_keyboard *keyboard) = 0;
 
-  virtual void RemovePointer () = 0;
-  virtual void RemoveKeyboard () = 0;
+  virtual void RemovePointer() = 0;
+  virtual void RemoveKeyboard() = 0;
 };
 
 class PointerReciever
 {
 public:
 
-  virtual ~PointerReciever () {}
-  virtual void Motion (uint32_t time,
-                       const float &x,
-                       const float &y) = 0;
-  virtual void Button (uint32_t serial,
-                       uint32_t time,
-                       uint32_t button,
-                       enum wl_pointer_button_state state) = 0;
-  virtual void Axis (uint32_t time,
-                     uint32_t axis,
-                     float value) = 0;
+  virtual ~PointerReciever() {}
+  virtual void Motion(uint32_t time,
+                      const float &x,
+                      const float &y) = 0;
+  virtual void Button(uint32_t serial,
+                      uint32_t time,
+                      uint32_t button,
+                      enum wl_pointer_button_state state) = 0;
+  virtual void Axis(uint32_t time,
+                    uint32_t axis,
+                    float value) = 0;
   virtual void Enter(struct wl_surface *surface,
                      double surfaceX,
                      double surfaceY) = 0;
@@ -82,12 +82,12 @@ public:
 
   virtual ~Keymap() {};
   
-  virtual uint32_t KeysymForKeycode (uint32_t code) const = 0;
-  virtual void UpdateMask (uint32_t depressed,
-                           uint32_t latched,
-                           uint32_t locked,
-                           uint32_t group) = 0;
-  virtual uint32_t CurrentModifiers () = 0;
+  virtual uint32_t KeysymForKeycode(uint32_t code) const = 0;
+  virtual void UpdateMask(uint32_t depressed,
+                          uint32_t latched,
+                          uint32_t locked,
+                          uint32_t group) = 0;
+  virtual uint32_t CurrentModifiers() = 0;
 };
 
 class KeyboardReciever
@@ -117,62 +117,62 @@ class Pointer
 {
 public:
 
-  Pointer (struct wl_pointer *,
-           PointerReciever &);
-  ~Pointer ();
+  Pointer(struct wl_pointer *,
+          PointerReciever &);
+  ~Pointer();
 
-  struct wl_pointer * GetWlPointer ();
+  struct wl_pointer * GetWlPointer();
 
   void SetCursor(uint32_t serial,
                  struct wl_surface *surface,
                  int32_t hotspot_x,
                  int32_t hotspot_y);
 
-  static void HandleEnterCallback (void *,
-                                   struct wl_pointer *,
-                                   uint32_t,
-                                   struct wl_surface *,
-                                   wl_fixed_t, 
-                                   wl_fixed_t);
-  static void HandleLeaveCallback (void *,
-                                   struct wl_pointer *,
-                                   uint32_t,
-                                   struct wl_surface *);
-  static void HandleMotionCallback (void *,
-                                    struct wl_pointer *,
-                                    uint32_t,
-                                    wl_fixed_t,
-                                    wl_fixed_t);
-  static void HandleButtonCallback (void *,
-                                    struct wl_pointer *,
-                                    uint32_t,
-                                    uint32_t,
-                                    uint32_t,
-                                    uint32_t);
-  static void HandleAxisCallback (void *,
+  static void HandleEnterCallback(void *,
                                   struct wl_pointer *,
                                   uint32_t,
-                                  uint32_t,
+                                  struct wl_surface *,
+                                  wl_fixed_t, 
                                   wl_fixed_t);
+  static void HandleLeaveCallback(void *,
+                                  struct wl_pointer *,
+                                  uint32_t,
+                                  struct wl_surface *);
+  static void HandleMotionCallback(void *,
+                                   struct wl_pointer *,
+                                   uint32_t,
+                                   wl_fixed_t,
+                                   wl_fixed_t);
+  static void HandleButtonCallback(void *,
+                                   struct wl_pointer *,
+                                   uint32_t,
+                                   uint32_t,
+                                   uint32_t,
+                                   uint32_t);
+  static void HandleAxisCallback(void *,
+                                 struct wl_pointer *,
+                                 uint32_t,
+                                 uint32_t,
+                                 wl_fixed_t);
 
 private:
 
-  void HandleEnter (uint32_t serial,
-                    struct wl_surface *surface,
+  void HandleEnter(uint32_t serial,
+                   struct wl_surface *surface,
+                   wl_fixed_t surfaceXFixed,
+                   wl_fixed_t surfaceYFixed);
+  void HandleLeave(uint32_t serial,
+                   struct wl_surface *surface);
+  void HandleMotion(uint32_t time,
                     wl_fixed_t surfaceXFixed,
                     wl_fixed_t surfaceYFixed);
-  void HandleLeave (uint32_t serial,
-                    struct wl_surface *surface);
-  void HandleMotion (uint32_t time,
-                     wl_fixed_t surfaceXFixed,
-                     wl_fixed_t surfaceYFixed);
-  void HandleButton (uint32_t serial,
-                     uint32_t time,
-                     uint32_t button,
-                     uint32_t state);
-  void HandleAxis (uint32_t time,
-                   uint32_t axis,
-                   wl_fixed_t value);
+  void HandleButton(uint32_t serial,
+                    uint32_t time,
+                    uint32_t button,
+                    uint32_t state);
+  void HandleAxis(uint32_t time,
+                  uint32_t axis,
+                  wl_fixed_t value);
 
   static const struct wl_pointer_listener listener;
 
@@ -270,21 +270,21 @@ class Seat :
 {
 public:
 
-  Seat (struct wl_seat *,
-        InputReciever &);
-  ~Seat ();
+  Seat(struct wl_seat *,
+       InputReciever &);
+  ~Seat();
 
-  struct wl_seat * GetWlSeat ();
+  struct wl_seat * GetWlSeat();
 
-  static void HandleCapabilitiesCallback (void *,
-                                          struct wl_seat *,
-                                          uint32_t);
+  static void HandleCapabilitiesCallback(void *,
+                                         struct wl_seat *,
+                                         uint32_t);
 
 private:
 
   static const struct wl_seat_listener listener;
 
-  void HandleCapabilities (enum wl_seat_capability);
+  void HandleCapabilities(enum wl_seat_capability);
 
   struct wl_seat * seat;
   InputReciever &input;
@@ -302,8 +302,8 @@ class EventListener
 {
 public:
 
-  virtual ~EventListener () {}
-  virtual bool OnEvent (XBMC_Event &) = 0;
+  virtual ~EventListener() {}
+  virtual bool OnEvent(XBMC_Event &) = 0;
   virtual bool OnFocused() = 0;
   virtual bool OnUnfocused() = 0;
 };
@@ -324,21 +324,21 @@ class PointerProcessor :
 {
 public:
 
-  PointerProcessor (EventListener &,
-                    CursorManager &);
+  PointerProcessor(EventListener &,
+                   CursorManager &);
 
 private:
 
-  void Motion (uint32_t time,
-               const float &x,
-               const float &y);
-  void Button (uint32_t serial,
-               uint32_t time,
-               uint32_t button,
-               enum wl_pointer_button_state state);
-  void Axis (uint32_t time,
-             uint32_t axis,
-             float value);
+  void Motion(uint32_t time,
+              const float &x,
+              const float &y);
+  void Button(uint32_t serial,
+              uint32_t time,
+              uint32_t button,
+              enum wl_pointer_button_state state);
+  void Axis(uint32_t time,
+            uint32_t axis,
+            float value);
   void Enter(struct wl_surface *surface,
              double surfaceX,
              double surfaceY);
@@ -453,32 +453,32 @@ class WaylandInput :
 {
 public:
 
-  WaylandInput (struct wl_seat *seat,
-                xbmc::EventDispatch &dispatch);
+  WaylandInput(struct wl_seat *seat,
+               xbmc::EventDispatch &dispatch);
   
   void SetXBMCSurface(struct wl_surface *surf);
 
 private:
 
-  void SetCursor (uint32_t serial,
-                  struct wl_surface *surface,
-                  double surfaceX,
-                  double surfaceY);
+  void SetCursor(uint32_t serial,
+                 struct wl_surface *surface,
+                 double surfaceX,
+                 double surfaceY);
 
-  bool InsertPointer (struct wl_pointer *);
-  bool InsertKeyboard (struct wl_keyboard *);
+  bool InsertPointer(struct wl_pointer *);
+  bool InsertKeyboard(struct wl_keyboard *);
 
-  void RemovePointer ();
-  void RemoveKeyboard ();
+  void RemovePointer();
+  void RemoveKeyboard();
 
-  bool OnEvent (XBMC_Event &);
+  bool OnEvent(XBMC_Event &);
 
   xbmc::PointerProcessor pointerProcessor;
   xbmc::KeyboardProcessor keyboardProcessor;
 
-  std::auto_ptr <xw::Seat> seat;
-  std::auto_ptr <xw::Pointer> pointer;
-  std::auto_ptr <xw::Keyboard> keyboard;
+  std::auto_ptr<xw::Seat> seat;
+  std::auto_ptr<xw::Pointer> pointer;
+  std::auto_ptr<xw::Keyboard> keyboard;
 };
 
 static xbmc::EventDispatch dispatch;
@@ -487,18 +487,18 @@ static std::auto_ptr <WaylandInput> inputInstance;
 
 xw::Seat::Seat(struct wl_seat *seat,
                InputReciever &reciever) :
-  seat (seat),
-  input (reciever),
-  currentCapabilities(static_cast <enum wl_seat_capability> (0))
+  seat(seat),
+  input(reciever),
+  currentCapabilities(static_cast<enum wl_seat_capability>(0))
 {
-  wl_seat_add_listener (seat,
-                        &listener,
-                        this);
+  wl_seat_add_listener(seat,
+                       &listener,
+                       this);
 }
 
 xw::Seat::~Seat()
 {
-  wl_seat_destroy (seat);
+  wl_seat_destroy(seat);
 }
 
 void xw::Seat::HandleCapabilitiesCallback(void *data,
@@ -506,16 +506,16 @@ void xw::Seat::HandleCapabilitiesCallback(void *data,
                                           uint32_t cap)
 {
   enum wl_seat_capability capabilities =
-    static_cast <enum wl_seat_capability> (cap);
-  static_cast <Seat *> (data)->HandleCapabilities(capabilities);
+    static_cast<enum wl_seat_capability>(cap);
+  static_cast<Seat *>(data)->HandleCapabilities(capabilities);
 }
 
 void xw::Seat::HandleCapabilities(enum wl_seat_capability cap)
 {
   enum wl_seat_capability newCaps =
-    static_cast <enum wl_seat_capability> (~currentCapabilities & cap);
+    static_cast<enum wl_seat_capability>(~currentCapabilities & cap);
   enum wl_seat_capability lostCaps =
-    static_cast <enum wl_seat_capability> (currentCapabilities & ~cap);
+    static_cast<enum wl_seat_capability>(currentCapabilities & ~cap);
 
   currentCapabilities = cap;
 
@@ -530,14 +530,14 @@ void xw::Seat::HandleCapabilities(enum wl_seat_capability cap)
     input.RemoveKeyboard();
 }
 
-xw::Pointer::Pointer (struct wl_pointer *pointer,
-                      PointerReciever &reciever) :
-  pointer (pointer),
-  reciever (reciever)
+xw::Pointer::Pointer(struct wl_pointer *pointer,
+                     PointerReciever &reciever) :
+  pointer(pointer),
+  reciever(reciever)
 {
-  wl_pointer_add_listener (pointer,
-                           &listener,
-                           this);
+  wl_pointer_add_listener(pointer,
+                          &listener,
+                          this);
 }
 
 xw::Pointer::~Pointer()
@@ -564,10 +564,10 @@ void xw::Pointer::HandleEnterCallback(void *data,
                                       wl_fixed_t x,
                                       wl_fixed_t y)
 {
-  static_cast <Pointer *> (data)->HandleEnter (serial,
-                                               surface,
-                                               x,
-                                               y);
+  static_cast<Pointer *>(data)->HandleEnter(serial,
+                                            surface,
+                                            x,
+                                            y);
 }
 
 void xw::Pointer::HandleLeaveCallback(void *data,
@@ -575,7 +575,7 @@ void xw::Pointer::HandleLeaveCallback(void *data,
                                       uint32_t serial,
                                       struct wl_surface *surface)
 {
-  static_cast <Pointer *> (data)->HandleLeave(serial, surface);
+  static_cast<Pointer *>(data)->HandleLeave(serial, surface);
 }
 
 void xw::Pointer::HandleMotionCallback(void *data,
@@ -584,9 +584,9 @@ void xw::Pointer::HandleMotionCallback(void *data,
                                        wl_fixed_t x,
                                        wl_fixed_t y)
 {
-  static_cast <Pointer *> (data)->HandleMotion(time,
-                                               x,
-                                               y);
+  static_cast<Pointer *>(data)->HandleMotion(time,
+                                             x,
+                                             y);
 }
 
 void xw::Pointer::HandleButtonCallback(void *data,
@@ -596,10 +596,10 @@ void xw::Pointer::HandleButtonCallback(void *data,
                                        uint32_t button,
                                        uint32_t state)
 {
-  static_cast <Pointer *> (data)->HandleButton(serial,
-                                               time,
-                                               button,
-                                               state);
+  static_cast<Pointer *>(data)->HandleButton(serial,
+                                             time,
+                                             button,
+                                             state);
 }
 
 void xw::Pointer::HandleAxisCallback(void *data,
@@ -608,9 +608,9 @@ void xw::Pointer::HandleAxisCallback(void *data,
                                      uint32_t axis,
                                      wl_fixed_t value)
 {
-  static_cast <Pointer *> (data)->HandleAxis (time,
-                                              axis,
-                                              value);
+  static_cast<Pointer *>(data)->HandleAxis(time,
+                                           axis,
+                                           value);
 }
 
 void xw::Pointer::HandleEnter(uint32_t serial,
@@ -633,8 +633,8 @@ void xw::Pointer::HandleMotion(uint32_t time,
                                wl_fixed_t surfaceYFixed)
 {
   reciever.Motion(time,
-                  wl_fixed_to_double (surfaceXFixed),
-                  wl_fixed_to_double (surfaceYFixed));
+                  wl_fixed_to_double(surfaceXFixed),
+                  wl_fixed_to_double(surfaceYFixed));
 }
 
 void xw::Pointer::HandleButton(uint32_t serial,
@@ -645,7 +645,7 @@ void xw::Pointer::HandleButton(uint32_t serial,
   reciever.Button(serial,
                   time,
                   button,
-                  static_cast <enum wl_pointer_button_state> (state));
+                  static_cast<enum wl_pointer_button_state>(state));
 }
 
 void xw::Pointer::HandleAxis(uint32_t time,
@@ -654,13 +654,13 @@ void xw::Pointer::HandleAxis(uint32_t time,
 {
   reciever.Axis(time,
                 axis,
-                wl_fixed_to_double (value));
+                wl_fixed_to_double(value));
 }
 
 xbmc::PointerProcessor::PointerProcessor(EventListener &listener,
                                          CursorManager &manager) :
-  listener (listener),
-  cursorManager (manager)
+  listener(listener),
+  cursorManager(manager)
 {
 }
 
@@ -671,8 +671,8 @@ void xbmc::PointerProcessor::Motion(uint32_t time,
   XBMC_Event event;
 
   event.type = XBMC_MOUSEMOTION;
-  event.motion.xrel = ::round (x);
-  event.motion.yrel = ::round (y);
+  event.motion.xrel = ::round(x);
+  event.motion.yrel = ::round(y);
   event.motion.state = 0;
   event.motion.type = XBMC_MOUSEMOTION;
   event.motion.which = 0;
@@ -701,7 +701,7 @@ void xbmc::PointerProcessor::Button(uint32_t serial,
     { WaylandRightButton, 3 }
   };
 
-  size_t buttonTableSize = sizeof (buttonTable) / sizeof (buttonTable[0]);
+  size_t buttonTableSize = sizeof(buttonTable) / sizeof(buttonTable[0]);
 
   unsigned int xbmcButton = 0;
 
@@ -725,8 +725,8 @@ void xbmc::PointerProcessor::Button(uint32_t serial,
   event.button.state = 0;
   event.button.type = event.type;
   event.button.which = 0;
-  event.button.x = ::round (lastPointerX);
-  event.button.y = ::round (lastPointerY);
+  event.button.x = ::round(lastPointerX);
+  event.button.y = ::round(lastPointerY);
 
   listener.OnEvent(event);
 }
@@ -749,8 +749,8 @@ void xbmc::PointerProcessor::Axis(uint32_t time,
     event.button.state = 0;
     event.button.type = XBMC_MOUSEBUTTONDOWN;
     event.button.which = 0;
-    event.button.x = ::round (lastPointerX);
-    event.button.y = ::round (lastPointerY);
+    event.button.x = ::round(lastPointerX);
+    event.button.y = ::round(lastPointerY);
 
     listener.OnEvent(event);
     
@@ -774,9 +774,9 @@ xbmc::PointerProcessor::Enter(struct wl_surface *surface,
 xw::Keyboard::Keyboard(struct wl_keyboard *keyboard,
                        struct xkb_context *context,
                        KeyboardReciever &reciever) :
-  keyboard (keyboard),
-  context (context),
-  reciever (reciever)
+  keyboard(keyboard),
+  context(context),
+  reciever(reciever)
 {
   wl_keyboard_add_listener(keyboard,
                            &listener,
@@ -928,7 +928,7 @@ void xw::Keyboard::HandleKey(uint32_t serial,
   reciever.Key(serial,
                time,
                key,
-               static_cast <enum wl_keyboard_key_state> (state));
+               static_cast<enum wl_keyboard_key_state>(state));
 }
 
 void xw::Keyboard::HandleModifiers(uint32_t serial,
@@ -1040,8 +1040,8 @@ xbmc::XKBKeymap::CurrentModifiers()
   for (size_t i = 0; i < modTableSize; ++i)
   {
     if (mask & (1 << modTable[i].xkbMod))
-      xbmcModifiers = static_cast <XBMCMod> (xbmcModifiers |
-                                             modTable[i].xbmcMod);
+      xbmcModifiers = static_cast<XBMCMod>(xbmcModifiers |
+                                           modTable[i].xbmcMod);
   }
 
   return static_cast<uint32_t>(xbmcModifiers);
@@ -1112,7 +1112,8 @@ xbmc::KeyboardProcessor::Key(uint32_t serial,
   }
   catch (const std::runtime_error &err)
   {
-    printf ("xbmc::KeyboardProcessor: %s\n", err.what());
+    /* TODO: Switch to CLog */
+    printf("xbmc::KeyboardProcessor: %s\n", err.what());
     return;
   }
   
@@ -1272,11 +1273,11 @@ bool xbmc::EventDispatch::OnUnfocused()
   return true;
 }
 
-WaylandInput::WaylandInput (struct wl_seat *seat,
-                            xbmc::EventDispatch &dispatch) :
-  pointerProcessor (dispatch, *this),
-  keyboardProcessor (dispatch),
-  seat (new xw::Seat (seat, *this))
+WaylandInput::WaylandInput(struct wl_seat *seat,
+                           xbmc::EventDispatch &dispatch) :
+  pointerProcessor(dispatch, *this),
+  keyboardProcessor(dispatch),
+  seat(new xw::Seat(seat, *this))
 {
 }
 
@@ -1293,22 +1294,22 @@ void WaylandInput::SetCursor(uint32_t serial,
   pointer->SetCursor(serial, surface, surfaceX, surfaceY);
 }
 
-bool WaylandInput::InsertPointer (struct wl_pointer *p)
+bool WaylandInput::InsertPointer(struct wl_pointer *p)
 {
-  if (pointer.get ())
+  if (pointer.get())
     return false;
 
-  pointer.reset (new xw::Pointer (p, pointerProcessor));
+  pointer.reset(new xw::Pointer(p, pointerProcessor));
   return true;
 }
 
-bool WaylandInput::InsertKeyboard (struct wl_keyboard *k)
+bool WaylandInput::InsertKeyboard(struct wl_keyboard *k)
 {
   if (keyboard.get())
     return false;
 
   enum xkb_context_flags flags =
-    static_cast <enum xkb_context_flags> (0);
+    static_cast<enum xkb_context_flags>(0);
 
   struct xkb_context *context = xkb_context_new(flags);
 
@@ -1323,7 +1324,7 @@ bool WaylandInput::InsertKeyboard (struct wl_keyboard *k)
 
 void WaylandInput::RemovePointer()
 {
-  pointer.reset ();
+  pointer.reset();
 }
 
 void WaylandInput::RemoveKeyboard()
@@ -1349,32 +1350,32 @@ bool CWinEventsWayland::MessagePump()
   if (!display)
     return false;
 
-  wl_display_dispatch_pending (display);
-  wl_display_flush (display);
-  wl_display_dispatch (display);
+  wl_display_dispatch_pending(display);
+  wl_display_flush(display);
+  wl_display_dispatch(display);
 
   return true;
 }
 
-void CWinEventsWayland::SetWaylandDisplay (struct wl_display *d)
+void CWinEventsWayland::SetWaylandDisplay(struct wl_display *d)
 {
   display = d;
 }
 
-void CWinEventsWayland::DestroyWaylandDisplay ()
+void CWinEventsWayland::DestroyWaylandDisplay()
 {
   MessagePump();
   display = NULL;
 }
 
-void CWinEventsWayland::SetWaylandSeat (struct wl_seat *s)
+void CWinEventsWayland::SetWaylandSeat(struct wl_seat *s)
 {
-  inputInstance.reset (new WaylandInput (s, dispatch));
+  inputInstance.reset(new WaylandInput(s, dispatch));
 }
 
-void CWinEventsWayland::DestroyWaylandSeat ()
+void CWinEventsWayland::DestroyWaylandSeat()
 {
-  inputInstance.reset ();
+  inputInstance.reset();
 }
 
 void CWinEventsWayland::SetXBMCSurface(struct wl_surface *s)
