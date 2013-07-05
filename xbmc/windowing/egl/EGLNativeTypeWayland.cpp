@@ -1121,7 +1121,6 @@ bool CEGLNativeTypeWayland::GetNativeDisplay(XBNativeDisplayType **nativeDisplay
   return false;
 #endif
 }
-}
 
 bool CEGLNativeTypeWayland::GetNativeWindow(XBNativeDisplayType **nativeWindow) const
 {
