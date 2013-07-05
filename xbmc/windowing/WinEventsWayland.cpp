@@ -71,6 +71,9 @@ public:
   virtual void Axis (uint32_t time,
                      uint32_t axis,
                      float value) = 0;
+  virtual void Enter(struct wl_surface *surface,
+                     double surfaceX,
+                     double surfaceY) = 0;
 };
 
 class Keymap
@@ -119,6 +122,11 @@ public:
   ~Pointer ();
 
   struct wl_pointer * GetWlPointer ();
+
+  void SetCursor(uint32_t serial,
+                 struct wl_surface *surface,
+                 int32_t hotspot_x,
+                 int32_t hotspot_y);
 
   static void HandleEnterCallback (void *,
                                    struct wl_pointer *,
@@ -300,12 +308,24 @@ public:
   virtual bool OnUnfocused() = 0;
 };
 
+class CursorManager
+{
+public:
+
+  virtual ~CursorManager() {}
+  virtual void SetCursor(uint32_t serial,
+                         struct wl_surface *surface,
+                         double surfaceX,
+                         double surfaceY) = 0;
+};
+
 class PointerProcessor :
   public wayland::PointerReciever
 {
 public:
 
-  PointerProcessor (EventListener &);
+  PointerProcessor (EventListener &,
+                    CursorManager &);
 
 private:
 
@@ -319,8 +339,12 @@ private:
   void Axis (uint32_t time,
              uint32_t axis,
              float value);
+  void Enter(struct wl_surface *surface,
+             double surfaceX,
+             double surfaceY);
 
   EventListener &listener;
+  CursorManager &cursorManager;
 
   uint32_t currentlyPressedButton;
   float    lastPointerX;
@@ -424,7 +448,8 @@ namespace xw = xbmc::wayland;
 namespace
 {
 class WaylandInput :
-  public xw::InputReciever
+  public xw::InputReciever,
+  public xbmc::CursorManager
 {
 public:
 
@@ -434,6 +459,11 @@ public:
   void SetXBMCSurface(struct wl_surface *surf);
 
 private:
+
+  void SetCursor (uint32_t serial,
+                  struct wl_surface *surface,
+                  double surfaceX,
+                  double surfaceY);
 
   bool InsertPointer (struct wl_pointer *);
   bool InsertKeyboard (struct wl_keyboard *);
@@ -515,6 +545,18 @@ xw::Pointer::~Pointer()
   wl_pointer_destroy(pointer);
 }
 
+void xw::Pointer::SetCursor(uint32_t serial,
+                            struct wl_surface *surface,
+                            int32_t hotspot_x,
+                            int32_t hotspot_y)
+{
+  wl_pointer_set_cursor(pointer,
+                        serial,
+                        surface,
+                        hotspot_x,
+                        hotspot_y);
+}
+
 void xw::Pointer::HandleEnterCallback(void *data,
                                       struct wl_pointer *pointer,
                                       uint32_t serial,
@@ -576,6 +618,9 @@ void xw::Pointer::HandleEnter(uint32_t serial,
                               wl_fixed_t surfaceXFixed,
                               wl_fixed_t surfaceYFixed)
 {
+  reciever.Enter(surface,
+                 wl_fixed_to_double(surfaceXFixed),
+                 wl_fixed_to_double(surfaceYFixed));
 }
 
 void xw::Pointer::HandleLeave(uint32_t serial,
@@ -612,8 +657,10 @@ void xw::Pointer::HandleAxis(uint32_t time,
                 wl_fixed_to_double (value));
 }
 
-xbmc::PointerProcessor::PointerProcessor(EventListener &listener) :
-  listener (listener)
+xbmc::PointerProcessor::PointerProcessor(EventListener &listener,
+                                         CursorManager &manager) :
+  listener (listener),
+  cursorManager (manager)
 {
 }
 
@@ -714,6 +761,14 @@ void xbmc::PointerProcessor::Axis(uint32_t time,
     
     listener.OnEvent(event);
   }
+}
+
+void
+xbmc::PointerProcessor::Enter(struct wl_surface *surface,
+                              double surfaceX,
+                              double surfaceY)
+{
+  cursorManager.SetCursor(0, NULL, 0, 0);
 }
 
 xw::Keyboard::Keyboard(struct wl_keyboard *keyboard,
@@ -1219,7 +1274,7 @@ bool xbmc::EventDispatch::OnUnfocused()
 
 WaylandInput::WaylandInput (struct wl_seat *seat,
                             xbmc::EventDispatch &dispatch) :
-  pointerProcessor (dispatch),
+  pointerProcessor (dispatch, *this),
   keyboardProcessor (dispatch),
   seat (new xw::Seat (seat, *this))
 {
@@ -1228,6 +1283,14 @@ WaylandInput::WaylandInput (struct wl_seat *seat,
 void WaylandInput::SetXBMCSurface(struct wl_surface *s)
 {
   keyboardProcessor.SetXBMCSurface(s);
+}
+
+void WaylandInput::SetCursor(uint32_t serial,
+                             struct wl_surface *surface,
+                             double surfaceX,
+                             double surfaceY)
+{
+  pointer->SetCursor(serial, surface, surfaceX, surfaceY);
 }
 
 bool WaylandInput::InsertPointer (struct wl_pointer *p)
