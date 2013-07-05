@@ -41,7 +41,7 @@
 
 #include "threads/CriticalSection.h"
 
-#define AUDIO_BUFFER_SECONDS 2
+#define AUDIO_BUFFER_SECONDS 3
 #define VIS_PACKET_SIZE 512
 
 #define OMX_IS_RAW(x)       \
@@ -83,7 +83,7 @@ public:
   void Process();
 
   void SetCodingType(AEDataFormat dataFormat);
-  static bool CanHWDecode(CodecID codec);
+  static bool CanHWDecode(AVCodecID codec);
 
   static void PrintChannels(OMX_AUDIO_CHANNELTYPE eChannelMapping[]);
   void PrintPCM(OMX_AUDIO_PARAM_PCMMODETYPE *pcm, std::string direction);
@@ -110,6 +110,7 @@ private:
   COMXCoreComponent *m_omx_clock;
   OMXClock       *m_av_clock;
   bool          m_settings_changed;
+  bool          m_setStartTime;
   bool          m_LostSync;
   int           m_SampleRate;
   OMX_AUDIO_CODINGTYPE m_eEncoding;
@@ -123,6 +124,7 @@ private:
   int           m_vizRemapBufferSize;
   uint8_t       *m_vizRemapBuffer;
   CAERemap      m_vizRemap;
+  bool          m_submitted_eos;
 
   OMX_AUDIO_PARAM_PCMMODETYPE m_pcm_output;
   OMX_AUDIO_PARAM_PCMMODETYPE m_pcm_input;

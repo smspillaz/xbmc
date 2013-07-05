@@ -37,7 +37,7 @@
 
 #define CLASSNAME "COMXVideo"
 
-typedef void (*ResolutionUpdateCallBackFn)(void *ctx, uint32_t width, uint32_t height);
+typedef void (*ResolutionUpdateCallBackFn)(void *ctx, uint32_t width, uint32_t height, float display_aspect);
 
 class COMXVideo
 {
@@ -53,7 +53,7 @@ public:
   void Close(void);
   unsigned int GetFreeSpace();
   unsigned int GetSize();
-  int  Decode(uint8_t *pData, int iSize, double dts, double pts);
+  int  Decode(uint8_t *pData, int iSize, double pts);
   void Reset(void);
   void SetDropState(bool bDrop);
   std::string GetDecoderName() { return m_video_codec_name; };
@@ -83,6 +83,7 @@ protected:
   COMXCoreTunel     m_omx_tunnel_sched;
   COMXCoreTunel     m_omx_tunnel_image_fx;
   bool              m_is_open;
+  bool              m_setStartTime;
 
   uint8_t           *m_extradata;
   int               m_extrasize;
@@ -93,13 +94,12 @@ protected:
   bool              m_deinterlace;
   EDEINTERLACEMODE  m_deinterlace_request;
   bool              m_hdmi_clock_sync;
-  uint32_t          m_history_valid_pts;
   ResolutionUpdateCallBackFn m_res_callback;
   void              *m_res_ctx;
   bool              m_submitted_eos;
   OMX_DISPLAYTRANSFORMTYPE m_transform;
   bool              m_settings_changed;
-  static bool NaluFormatStartCodes(enum CodecID codec, uint8_t *in_extradata, int in_extrasize);
+  static bool NaluFormatStartCodes(enum AVCodecID codec, uint8_t *in_extradata, int in_extrasize);
 };
 
 #endif

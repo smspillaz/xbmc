@@ -63,7 +63,6 @@ protected:
   int               m_omx_speed;
   bool              m_video_start;
   bool              m_audio_start;
-  bool              m_audio_buffer;
   CDVDClock         *m_clock;
 private:
   COMXCoreComponent m_omx_clock;
@@ -82,12 +81,11 @@ public:
   void OMXDeinitialize();
   bool OMXIsPaused() { return m_pause; };
   bool OMXStop(bool lock = true);
-  bool OMXStart(bool lock = true);
   bool OMXStep(int steps = 1, bool lock = true);
   bool OMXReset(bool lock = true);
-  double OMXMediaTime(bool fixPreroll = true, bool lock = true);
+  double OMXMediaTime(bool lock = true);
   double OMXClockAdjustment(bool lock = true);
-  bool OMXMediaTime(double pts, bool fixPreroll = true, bool lock = true);
+  bool OMXMediaTime(double pts, bool lock = true);
   bool OMXPause(bool lock = true);
   bool OMXResume(bool lock = true);
   bool OMXSetSpeed(int speed, bool lock = true, bool pause_resume = false);
@@ -102,13 +100,6 @@ public:
   bool HasAudio() { return m_has_audio; };
   void HasVideo(bool has_video) { m_has_video = has_video; };
   void HasAudio(bool has_audio) { m_has_audio = has_audio; };
-  bool VideoStart() { return m_video_start; };
-  bool AudioStart() { return m_audio_start; };
-  void VideoStart(bool video_start);
-  void AudioStart(bool audio_start);
-  void OMXAudioBufferStart();
-  void OMXAudioBufferStop();
-  bool OMXAudioBuffer() { return m_audio_buffer; };
 
   int     GetRefreshRate(double* interval = NULL);
   void    SetRefreshRate(double fps) { m_fps = fps; };
