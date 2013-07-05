@@ -24,6 +24,10 @@
 #pragma once
 #include "windowing/WinEvents.h"
 
+struct wl_display;
+struct wl_seat;
+struct wl_surface;
+
 class CWinEventsWayland : public CWinEventsBase
 {
 public:

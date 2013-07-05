@@ -329,7 +329,7 @@ AC_ARG_ENABLE([wayland],
   [AS_HELP_STRING([--enable-wayland],
   [enable wayland (default is no) 'Linux Only'])],
   [use_wayland=$enableval],
-  [use_wayland=yes])
+  [use_wayland=no])
 
 AC_ARG_ENABLE([x11],
   [AS_HELP_STRING([--enable-x11],

@@ -37,6 +37,7 @@
 #include "EGLNativeTypeWayland.h"
 #include "../WinEvents.h"
 
+#if defined(HAVE_WAYLAND)
 namespace
 {
 class WaylandRegistration
@@ -290,10 +291,10 @@ private:
 
 const wl_output_listener Output::listener = 
 {
-	Output::GeometryCallback,
-	Output::ModeCallback,
-	Output::DoneCallback,
-	Output::ScaleCallback
+  Output::GeometryCallback,
+  Output::ModeCallback,
+  Output::DoneCallback,
+  Output::ScaleCallback
 };
 
 class Surface :
@@ -630,7 +631,7 @@ const xw::Output::ModeGeometry &
 xw::Output::CurrentMode()
 {
   if (!current)
-	throw std::logic_error("No current mode has been set by the server"
+    throw std::logic_error("No current mode has been set by the server"
                            " yet");
   
   return *current;
@@ -963,6 +964,11 @@ private:
 
   void OnFrameCallback(uint32_t);
 };
+#else
+class CEGLNativeTypeWayland::Private
+{
+};
+#endif
 
 CEGLNativeTypeWayland::CEGLNativeTypeWayland() :
   priv(new Private())
@@ -973,6 +979,7 @@ CEGLNativeTypeWayland::~CEGLNativeTypeWayland()
 {
 } 
 
+#if defined(HAVE_WAYLAND)
 bool CEGLNativeTypeWayland::Private::OnCompositorAvailable(struct wl_compositor *c)
 {
   compositor.reset(new xw::Compositor(c));
@@ -1003,14 +1010,6 @@ bool CEGLNativeTypeWayland::Private::OnOutputAvailable(struct wl_output *o)
   return true;
 }
 
-bool CEGLNativeTypeWayland::CheckCompatibility()
-{
-  if (!getenv("WAYLAND_DISPLAY"))
-    return false;
-
-  return true;
-}
-
 void CEGLNativeTypeWayland::Private::WaitForSynchronize()
 {
   boost::function<void(uint32_t)> func(boost::bind(&Private::Synchronize,
@@ -1028,6 +1027,15 @@ void CEGLNativeTypeWayland::Private::Synchronize()
   synchronized = true;
   synchronizeCallback.reset();
 }
+#endif
+
+bool CEGLNativeTypeWayland::CheckCompatibility()
+{
+  if (!getenv("WAYLAND_DISPLAY"))
+    return false;
+
+  return true;
+}
 
 void CEGLNativeTypeWayland::Initialize()
 {
@@ -1035,19 +1043,22 @@ void CEGLNativeTypeWayland::Initialize()
 
 void CEGLNativeTypeWayland::Destroy()
 {
+#if defined(HAVE_WAYLAND)
   priv->registry.reset();
   priv->display.reset();
+#endif
 }
 
 bool CEGLNativeTypeWayland::CreateNativeDisplay()
 {
+#if defined(HAVE_WAYLAND)
   try
   {
     priv->display.reset(new xw::Display());
   }
   catch (const std::runtime_error &err)
   {
-	/* TODO: Use CLog */
+    /* TODO: Use CLog */
     std::cout << err.what();
   }
 
@@ -1058,10 +1069,14 @@ bool CEGLNativeTypeWayland::CreateNativeDisplay()
   priv->WaitForSynchronize();
 
   return true;
+#else
+  return false;
+#endif
 }
 
 bool CEGLNativeTypeWayland::CreateNativeWindow()
 {
+#if defined(HAVE_WAYLAND)
   struct wl_surface *wls = priv->compositor->CreateSurface();
   xw::Surface *s = new xw::Surface(wls);
   priv->surface.reset(s);
@@ -1091,24 +1106,37 @@ bool CEGLNativeTypeWayland::CreateNativeWindow()
   CWinEventsWayland::SetXBMCSurface(wls);
 
   return true;
+#else
+  return false;
+#endif
 }
 
 bool CEGLNativeTypeWayland::GetNativeDisplay(XBNativeDisplayType **nativeDisplay) const
 {
+#if defined(HAVE_WAYLAND)
   *nativeDisplay =
       reinterpret_cast <XBNativeDisplayType *>(priv->display.get());
   return true;
+#else
+  return false;
+#endif
+}
 }
 
 bool CEGLNativeTypeWayland::GetNativeWindow(XBNativeDisplayType **nativeWindow) const
 {
+#if defined(HAVE_WAYLAND)
   *nativeWindow =
       reinterpret_cast <XBNativeWindowType *>(priv->glSurface.get());
   return true;
+#else
+  return false;
+#endif
 }  
 
 bool CEGLNativeTypeWayland::DestroyNativeDisplay()
 {
+#if defined(HAVE_WAYLAND)
   CWinEventsWayland::DestroyWaylandSeat();
   CWinEventsWayland::DestroyWaylandDisplay();
 
@@ -1120,17 +1148,25 @@ bool CEGLNativeTypeWayland::DestroyNativeDisplay()
   
   priv->display.reset();
   return true;
+#else
+  return false;
+#endif
 }
 
 bool CEGLNativeTypeWayland::DestroyNativeWindow()
 {
+#if defined(HAVE_WAYLAND)
   priv->glSurface.reset();
   priv->shellSurface.reset();
   priv->surface.reset();
   priv->frameCallback.reset();
   return true;  
+#else
+  return false;
+#endif
 }
 
+#if defined(HAVE_WAYLAND)
 namespace
 {
 void ResolutionInfoForMode(const xw::Output::ModeGeometry &mode,
@@ -1152,19 +1188,25 @@ void ResolutionInfoForMode(const xw::Output::ModeGeometry &mode,
                       res->fRefreshRate);
 }
 }
+#endif
 
 bool CEGLNativeTypeWayland::GetNativeResolution(RESOLUTION_INFO *res) const
 {
+#if defined(HAVE_WAYLAND)
   /* Supporting only the first output device at the moment */
   const xw::Output::ModeGeometry &current(priv->outputs[0]->CurrentMode());
   
   ResolutionInfoForMode(current, res);
 
   return true;
+#else
+  return false;
+#endif
 }
 
 bool CEGLNativeTypeWayland::SetNativeResolution(const RESOLUTION_INFO &res)
 {
+#if defined(HAVE_WAYLAND)
   priv->glSurface->Resize(res.iScreenWidth, res.iScreenHeight);
   
   xw::Region region(priv->compositor->CreateRegion());
@@ -1174,10 +1216,14 @@ bool CEGLNativeTypeWayland::SetNativeResolution(const RESOLUTION_INFO &res)
   priv->surface->SetOpaqueRegion(region.GetWlRegion());
   priv->surface->Commit();
   return true;
+#else
+  return false;
+#endif
 }
 
 bool CEGLNativeTypeWayland::ProbeResolutions(std::vector<RESOLUTION_INFO> &resolutions)
 {
+#if defined(HAVE_WAYLAND)
   /* Supporting only the first output device at the moment */
   const boost::shared_ptr <xw::Output> &output(priv->outputs[0]);
   const std::vector<xw::Output::ModeGeometry> &modes(output->AllModes());
@@ -1193,18 +1239,26 @@ bool CEGLNativeTypeWayland::ProbeResolutions(std::vector<RESOLUTION_INFO> &resol
   }
 
   return true;
+#else
+  return false;
+#endif
 }
 
 bool CEGLNativeTypeWayland::GetPreferredResolution(RESOLUTION_INFO *res) const
 {
+#if defined(HAVE_WAYLAND)
   /* Supporting only the first output device at the moment */
   const xw::Output::ModeGeometry &preferred(priv->outputs[0]->PreferredMode());
   ResolutionInfoForMode(preferred, res);
   return true;
+#else
+  return false;
+#endif
 }
 
 bool CEGLNativeTypeWayland::ShowWindow(bool show)
 {
+#if defined(HAVE_WAYLAND)
   if (show)
     priv->shellSurface->SetFullscreen(WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT,
                                       0,
@@ -1213,8 +1267,12 @@ bool CEGLNativeTypeWayland::ShowWindow(bool show)
     return false;
 
   return true;
+#else
+  return false;
+#endif
 }
 
+#if defined(HAVE_WAYLAND)
 void CEGLNativeTypeWayland::Private::OnFrameCallback(uint32_t time)
 {
   AddFrameCallback();
@@ -1227,3 +1285,4 @@ void CEGLNativeTypeWayland::Private::AddFrameCallback()
                                                    this,
                                                    _1)));
 }
+#endif
