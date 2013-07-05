@@ -58,8 +58,6 @@ public:
   virtual bool  GetPreferredResolution(RESOLUTION_INFO *res) const;
 
   virtual bool  ShowWindow(bool show);
-
-  virtual void  WaitForSwapBuffers();
 private:
 
   class Private;

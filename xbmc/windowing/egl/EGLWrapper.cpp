@@ -367,12 +367,6 @@ bool CEGLWrapper::SetVSync(EGLDisplay display, bool enable)
   return status;
 }
 
-void CEGLWrapper::WaitForSwapBuffers()
-{
-  if (m_nativeTypes)
-    m_nativeTypes->WaitForSwapBuffers();
-}
-
 void CEGLWrapper::SwapBuffers(EGLDisplay display, EGLSurface surface)
 {
   if ((display == EGL_NO_DISPLAY) || (surface == EGL_NO_SURFACE))

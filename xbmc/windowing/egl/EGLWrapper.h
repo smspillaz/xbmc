@@ -58,7 +58,6 @@ public:
   bool DestroyDisplay(EGLDisplay display);
 
   std::string GetExtensions(EGLDisplay display);
-  void WaitForSwapBuffers();
   void SwapBuffers(EGLDisplay display, EGLSurface surface);
   bool SetVSync(EGLDisplay display, bool enable);
   bool IsExtSupported(const char* extension);

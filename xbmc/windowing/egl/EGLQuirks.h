@@ -34,8 +34,3 @@
      native window will be created each time the main XBMC window is recreated.
 */
 #define EGL_QUIRK_DESTROY_NATIVE_WINDOW_WITH_SURFACE (1 << 1)
-
-/*!  \brief Enable this if the implementation should control when SwapBuffers
- *   is called. This is used on platforms that where the window system synchronizes
- *   repaints across clients and can suspend client painting if it needs to */
-#define EGL_QUIRK_PLATFORM_CONTROLS_SWAPBUFFERS (1 << 2)

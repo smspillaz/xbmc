@@ -87,6 +87,26 @@ const wl_callback_listener Callback::listener =
   Callback::OnCallback
 };
 
+class Region :
+  boost::noncopyable
+{
+public:
+
+  Region(struct wl_region *);
+  ~Region();
+  
+  struct wl_region * GetWlRegion();
+
+  void AddRectangle(int32_t x,
+                    int32_t y,
+                    int32_t width,
+                    int32_t height);
+
+private:
+
+  struct wl_region *region;
+};
+
 class Display :
   boost::noncopyable
 {
@@ -158,6 +178,7 @@ public:
 
   struct wl_compositor * GetWlCompositor ();
   struct wl_surface * CreateSurface ();
+  struct wl_region * CreateRegion();
 
 private:
 
@@ -285,6 +306,8 @@ public:
 
   struct wl_surface * GetWlSurface ();
   struct wl_callback * CreateFrameCallback ();
+  void SetOpaqueRegion (struct wl_region *region);
+  void Commit ();
 
 private:
 
@@ -358,6 +381,31 @@ private:
 }
 
 namespace xw = xbmc::wayland;
+
+xw::Region::Region(struct wl_region *region) :
+  region (region)
+{
+}
+
+xw::Region::~Region()
+{
+  wl_region_destroy(region);
+}
+
+struct wl_region *
+xw::Region::GetWlRegion()
+{
+  return region;
+}
+
+void
+xw::Region::AddRectangle(int32_t x,
+                         int32_t y,
+                         int32_t width,
+                         int32_t height)
+{
+  wl_region_add(region, x, y, width, height);
+}
 
 xw::Callback::Callback (struct wl_callback *callback,
                         const Func &func) :
@@ -526,6 +574,12 @@ struct wl_surface *
 xw::Compositor::CreateSurface()
 {
   return wl_compositor_create_surface (compositor);
+}
+
+struct wl_region *
+xw::Compositor::CreateRegion()
+{
+  return wl_compositor_create_region(compositor);
 }
 
 xw::Shell::Shell (struct wl_shell *shell) :
@@ -757,6 +811,18 @@ xw::Surface::CreateFrameCallback()
   return wl_surface_frame (surface);
 }
 
+void
+xw::Surface::SetOpaqueRegion(struct wl_region *region)
+{
+  wl_surface_set_opaque_region(surface, region);
+}
+
+void
+xw::Surface::Commit()
+{
+  wl_surface_commit(surface);
+}
+
 xw::ShellSurface::ShellSurface (struct wl_shell_surface *shell_surface) :
   shell_surface (shell_surface)
 {
@@ -867,14 +933,10 @@ class CEGLNativeTypeWayland::Private :
 {
 public:
 
-  Private ();
-
   std::auto_ptr <xw::Display> display;
   std::auto_ptr <xw::Registry> registry;
   std::auto_ptr <xw::Compositor> compositor;
   std::auto_ptr <xw::Shell> shell;
-  
-  struct wl_seat *seatForInput;
 
   std::auto_ptr <xw::Surface> surface;
   std::auto_ptr <xw::ShellSurface> shellSurface;
@@ -882,8 +944,6 @@ public:
   std::auto_ptr <xw::Callback> frameCallback;
   
   std::vector <boost::shared_ptr <xw::Output> > outputs;
-
-  bool swapBuffersIsReady;
 
   void AddFrameCallback();
   void WaitForSynchronize();
@@ -903,12 +963,6 @@ private:
 
   void OnFrameCallback(uint32_t);
 };
-
-CEGLNativeTypeWayland::Private::Private() :
-  seatForInput(NULL),
-  swapBuffersIsReady (false)
-{
-}
 
 CEGLNativeTypeWayland::CEGLNativeTypeWayland() :
   priv (new Private ())
@@ -1021,6 +1075,13 @@ bool CEGLNativeTypeWayland::CreateNativeWindow()
                                                  current.width,
                                                  current.height);
   priv->glSurface.reset (os);
+  
+  xw::Region region(priv->compositor->CreateRegion());
+  
+  region.AddRectangle(0, 0, current.width, current.height);
+  
+  priv->surface->SetOpaqueRegion(region.GetWlRegion());
+  priv->surface->Commit();
 
   priv->AddFrameCallback ();
   priv->WaitForSynchronize();
@@ -1103,6 +1164,13 @@ bool CEGLNativeTypeWayland::GetNativeResolution(RESOLUTION_INFO *res) const
 bool CEGLNativeTypeWayland::SetNativeResolution(const RESOLUTION_INFO &res)
 {
   priv->glSurface->Resize(res.iScreenWidth, res.iScreenHeight);
+  
+  xw::Region region(priv->compositor->CreateRegion());
+  
+  region.AddRectangle(0, 0, res.iScreenWidth, res.iScreenHeight);
+  
+  priv->surface->SetOpaqueRegion(region.GetWlRegion());
+  priv->surface->Commit();
   return true;
 }
 
@@ -1145,18 +1213,9 @@ bool CEGLNativeTypeWayland::ShowWindow(bool show)
   return true;
 }
 
-void CEGLNativeTypeWayland::WaitForSwapBuffers()
-{
-  while (!priv->swapBuffersIsReady)
-    CWinEvents::MessagePump();
-
-  priv->swapBuffersIsReady = false;
-}
-
 void CEGLNativeTypeWayland::Private::OnFrameCallback(uint32_t time)
 {
   AddFrameCallback ();
-  swapBuffersIsReady = true;
 }
 
 void CEGLNativeTypeWayland::Private::AddFrameCallback()
