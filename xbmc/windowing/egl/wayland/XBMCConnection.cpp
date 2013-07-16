@@ -65,7 +65,7 @@ public:
   IDllWaylandClient &m_clientLibrary;
   IDllXKBCommon &m_xkbCommonLibrary;
   
-  EventInjector &m_eventInjector;
+  EventInjector m_eventInjector;
 
   boost::scoped_ptr<Display> m_display;
   boost::scoped_ptr<Registry> m_registry;
@@ -115,6 +115,7 @@ xw::XBMCConnection::Private::Private(IDllWaylandClient &clientLibrary,
 
 xw::XBMCConnection::Private::~Private()
 {
+  (*m_eventInjector.destroyWaylandSeat)();
   (*m_eventInjector.destroyDisplay)();
 }
 
@@ -145,6 +146,9 @@ bool xw::XBMCConnection::Private::OnShellAvailable(struct wl_shell *s)
 
 bool xw::XBMCConnection::Private::OnSeatAvailable(struct wl_seat *s)
 {
+  (*m_eventInjector.setWaylandSeat)(m_clientLibrary,
+                                    m_xkbCommonLibrary,
+                                    s);
   return true;
 }
 
