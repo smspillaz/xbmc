@@ -167,12 +167,14 @@ bool CEGLNativeTypeWayland::CreateNativeWindow()
 #if defined(HAVE_WAYLAND)
   try
   {
+    RESOLUTION_INFO info;
+    priv->m_connection->CurrentResolution(info);
     priv->m_surface.reset(new xw::XBMCSurface(priv->m_libraries->ClientLibrary(),
                                               priv->m_libraries->EGLLibrary(),
                                               priv->m_connection->GetCompositor(),
                                               priv->m_connection->GetShell(),
-                                              640,
-                                              480));
+                                              info.iScreenWidth,
+                                              info.iScreenHeight));
   }
   catch (const std::runtime_error &err)
   {
@@ -209,7 +211,7 @@ bool CEGLNativeTypeWayland::GetNativeWindow(XBNativeDisplayType **nativeWindow) 
 #else
   return false;
 #endif
-}  
+}
 
 bool CEGLNativeTypeWayland::DestroyNativeDisplay()
 {
@@ -235,7 +237,6 @@ bool CEGLNativeTypeWayland::GetNativeResolution(RESOLUTION_INFO *res) const
 {
 #if defined(HAVE_WAYLAND)
   priv->m_connection->CurrentResolution(*res);
-
   return true;
 #else
   return false;
@@ -276,7 +277,7 @@ bool CEGLNativeTypeWayland::ShowWindow(bool show)
 {
 #if defined(HAVE_WAYLAND)
   if (show)
-    priv->m_surface->Show();
+    priv->m_surface->Show(priv->m_connection->GetFirstOutput());
   else
     return false;
 

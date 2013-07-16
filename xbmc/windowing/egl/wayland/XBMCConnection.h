@@ -43,6 +43,7 @@ namespace xbmc
 namespace wayland
 {
 class Compositor;
+class Output;
 class Shell;
 
 class XBMCConnection
@@ -74,6 +75,7 @@ public:
   
   const boost::scoped_ptr<Compositor> & GetCompositor() const;
   const boost::scoped_ptr<Shell> & GetShell() const;
+  const boost::shared_ptr<Output> & GetFirstOutput() const;
   
 private:
 
