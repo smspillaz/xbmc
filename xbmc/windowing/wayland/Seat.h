@@ -38,6 +38,10 @@ class IInputReceiver
 public:
 
   virtual ~IInputReceiver() {}
+
+  virtual bool InsertPointer(struct wl_pointer *pointer) = 0;
+
+  virtual void RemovePointer() = 0;
 };
 
 class Seat :

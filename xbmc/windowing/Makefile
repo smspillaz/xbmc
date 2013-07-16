@@ -4,7 +4,8 @@ SRCS=WinEventsSDL.cpp \
      WinSystem.cpp \
 
 # Wayland implementation detail
-SRCS += wayland/Seat.cpp
+SRCS += wayland/Seat.cpp \
+        wayland/Pointer.cpp
 
 LIB=windowing.a
 
