@@ -4,7 +4,22 @@ SRCS = WinSystemEGL.cpp
 SRCS+= EGLNativeTypeAmlogic.cpp
 SRCS+= EGLNativeTypeAndroid.cpp
 SRCS+= EGLNativeTypeRaspberryPI.cpp
+SRCS+= EGLNativeTypeWayland.cpp
 SRCS+= EGLWrapper.cpp
+
+# Wayland specific detail
+SRCS+= wayland/Callback.cpp \
+       wayland/Compositor.cpp \
+       wayland/Display.cpp \
+       wayland/OpenGLSurface.cpp \
+       wayland/Region.cpp \
+       wayland/Registry.cpp \
+       wayland/Shell.cpp \
+       wayland/ShellSurface.cpp \
+       wayland/Surface.cpp \
+       wayland/WaylandLibraries.cpp \
+       wayland/XBMCConnection.cpp \
+       wayland/XBMCSurface.cpp
 
 LIB = windowing_egl.a
 
