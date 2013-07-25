@@ -101,7 +101,7 @@ xw::XBMCConnection::Private::Private(IDllWaylandClient &clientLibrary,
                               m_display->GetWlDisplay(),
                               *this))
 {
-  (*m_eventInjector.setDisplay)(&clientLibrary,
+  (*m_eventInjector.setDisplay)(clientLibrary,
                                 m_display->GetWlDisplay());
 	
   WaitForSynchronize();

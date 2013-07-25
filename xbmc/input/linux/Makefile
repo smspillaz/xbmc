@@ -1,6 +1,9 @@
 SRCS=LIRC.cpp \
   LinuxInputDevices.cpp
 
+# xkbcommon detail
+SRCS += XKBCommonKeymap.cpp
+
 LIB=input_linux.a
 
 include ../../../Makefile.include
