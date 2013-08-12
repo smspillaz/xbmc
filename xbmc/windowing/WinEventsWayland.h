@@ -31,6 +31,17 @@ struct wl_surface;
 class IDllWaylandClient;
 class IDllXKBCommon;
 
+namespace xbmc
+{
+namespace wayland
+{
+namespace events
+{
+class IEventQueueStrategy;
+}
+}
+}
+
 class CWinEventsWayland : public CWinEventsBase
 {
 public:
@@ -40,6 +51,7 @@ public:
   static bool IsRemoteLowBattery();
 
   static void SetWaylandDisplay(IDllWaylandClient &clientLibrary,
+                                xbmc::wayland::events::IEventQueueStrategy &strategy,
                                 struct wl_display *d);
   static void DestroyWaylandDisplay();
 
