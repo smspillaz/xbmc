@@ -227,6 +227,27 @@ public:
     CallbackObserver callback;
   };
   
+  /* Worker thread responsible for reading the event queue
+   * so that we can dispatch it without blocking in the
+   * main thread */
+  class Reader :
+    public CThread
+  {
+  public:
+  
+    Reader(IDllWaylandClient &clientLibrary,
+           struct wl_display *display);
+    ~Reader();
+    
+    void Process ();
+  
+  private:
+  
+    IDllWaylandClient &m_clientLibrary;
+    struct wl_display *m_display;
+    int m_wakeupPipe[2];
+  };
+  
 private:
 
   CallbackPtr RepeatAfterMs(const Callback &callback,
@@ -239,6 +260,8 @@ private:
   struct wl_display *m_display;
   std::vector<CallbackTracker> m_callbackQueue;
   CStopWatch m_stopWatch;
+  
+  Reader m_readerThread;
 };
 
 class WaylandInput :
@@ -663,10 +686,103 @@ void WaylandInput::RemoveKeyboard()
   m_keyboard.reset();
 }
 
+WaylandEventLoop::Reader::Reader(IDllWaylandClient &clientLibrary,
+                                 struct wl_display *display) :
+  CThread("wayland-event-reader"),
+  m_clientLibrary(clientLibrary),
+  m_display(display)
+{
+  /* Create wakeup pipe. We will poll on the read end of this. If
+   * there are any events, it means its time to shut down */
+  if (pipe2(m_wakeupPipe, O_CLOEXEC) == -1)
+  {
+    std::stringstream ss;
+    ss << strerror(errno);
+    throw std::runtime_error(ss.str());
+  }
+  
+  /* Create reader thread */
+  Create();
+}
+
+WaylandEventLoop::Reader::~Reader()
+{
+  /* Send a message to the reader thread that its time to shut down */
+  if (write(m_wakeupPipe[1], (const void *) "q", 1) == -1)
+    CLog::Log(LOGERROR, "%s: Failed to write to shutdown wakeup pipe. "
+                        "Application may hang. Reason was: %s",
+              __FUNCTION__, strerror(errno));
+
+  /* Close the write end, as we no longer need it */
+  if (close(m_wakeupPipe[1]) == -1)
+    CLog::Log(LOGERROR, "%s: Failed to close shutdown pipe write end. "
+                      "Leak may occurr. Reason was: %s",
+            __FUNCTION__, strerror(errno));
+
+  /* The destructor for CThread will cause it to join */
+}
+
+namespace
+{
+bool Ready(int revents)
+{
+  if (revents & (POLLHUP | POLLERR))
+    CLog::Log(LOGERROR, "%s: Error on fd. Reason was: %s",
+              __FUNCTION__, strerror(errno));
+  
+  return revents & POLLIN;
+}
+}
+
+void
+WaylandEventLoop::Reader::Process()
+{
+  static const unsigned int WaylandFdIndex = 0;
+  static const unsigned int ShutdownFdIndex = 1;
+  
+  const int wlfd = m_clientLibrary.wl_display_get_fd(m_display);
+  
+  while (1)
+  {
+    struct pollfd pfd[2] =
+    {
+      { wlfd, POLLIN | POLLHUP | POLLERR, 0 },
+      { m_wakeupPipe[0], POLLIN | POLLHUP | POLLERR, 0 }
+    };
+    
+    /* Sleep forever until something happens */
+    if (poll(pfd, 2, -1) == -1)
+      CLog::Log(LOGERROR, "%s: Poll failed. Reason was: %s",
+                __FUNCTION__, strerror(errno));
+    
+    /* Check the shutdown pipe first as we might need to
+     * shutdown */
+    if (Ready(pfd[ShutdownFdIndex].revents))
+    {
+      if (close(m_wakeupPipe[0]) == -1)
+        CLog::Log(LOGERROR, "%s: Failed to close shutdown pipe read end. "
+                            "Leak may occurr. Reason was: %s",
+                  __FUNCTION__, strerror(errno));
+      return;
+    }
+    else if (Ready(pfd[WaylandFdIndex].revents))
+    {
+      /* If wl_display_prepare_read() returns it means that we
+       * still have more events to dispatch. So let the main thread
+       * dispatch all the pending events first before trying to read
+       * more events from the pipe */
+      if (m_clientLibrary.wl_display_prepare_read(m_display) == 0)
+        m_clientLibrary.wl_display_read_events(m_display);
+    }
+  }
+}
+  
+
 WaylandEventLoop::WaylandEventLoop(IDllWaylandClient &clientLibrary,
                                    struct wl_display *display) :
   m_clientLibrary(clientLibrary),
-  m_display(display)
+  m_display(display),
+  m_readerThread(m_clientLibrary, m_display)
 {
   m_stopWatch.StartZero();
 }
@@ -724,6 +840,9 @@ void WaylandEventLoop::DispatchTimers()
 
 void WaylandEventLoop::Dispatch()
 {
+  /* The reader thread will handle reading the fd for new events
+   * for us. All we need to do is dispatch pending events as they
+   * arrive */
   m_clientLibrary.wl_display_dispatch_pending(m_display);
   m_clientLibrary.wl_display_flush(m_display);
 
@@ -745,20 +864,6 @@ void WaylandEventLoop::Dispatch()
     if (minTimeout < it->remaining)
       minTimeout = it->remaining;
   }
-  
-  struct pollfd pfd;
-  pfd.events = POLLIN | POLLHUP | POLLERR;
-  pfd.revents = 0;
-  pfd.fd = m_clientLibrary.wl_display_get_fd(m_display);
-  
-  int pollTimeout = minTimeout == 0 ?
-                    -1 : minTimeout;
-
-  if (poll(&pfd, 1, pollTimeout) == -1)
-    throw std::runtime_error(strerror(errno));
-
-  DispatchTimers();
-  m_clientLibrary.wl_display_dispatch(m_display);
 }
 
 xbmc::ITimeoutManager::CallbackPtr
@@ -822,8 +927,6 @@ void CWinEventsWayland::SetWaylandDisplay(IDllWaylandClient &clientLibrary,
 
 void CWinEventsWayland::DestroyWaylandDisplay()
 {
-  MessagePump();
-
   g_eventLoop.reset();
 }
 

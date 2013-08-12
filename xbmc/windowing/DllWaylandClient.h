@@ -82,7 +82,8 @@ public:
   virtual struct wl_display * wl_display_connect(const char *) = 0;
   virtual void wl_display_disconnect(struct wl_display *) = 0;
   virtual int wl_display_get_fd(struct wl_display *) = 0;
-  virtual int wl_display_dispatch(struct wl_display *) = 0;
+  virtual int wl_display_prepare_read(struct wl_display *) = 0;
+  virtual int wl_display_read_events(struct wl_display *) = 0;
   virtual int wl_display_dispatch_pending(struct wl_display *) = 0;
   virtual int wl_display_flush(struct wl_display *) = 0;
   
@@ -118,7 +119,8 @@ class DllWaylandClient : public DllDynamic, public IDllWaylandClient
   DEFINE_METHOD1(struct wl_display *, wl_display_connect, (const char *p1));
   DEFINE_METHOD1(void, wl_display_disconnect, (struct wl_display *p1));
   DEFINE_METHOD1(int, wl_display_get_fd, (struct wl_display *p1));
-  DEFINE_METHOD1(int, wl_display_dispatch, (struct wl_display *p1));
+  DEFINE_METHOD1(int, wl_display_prepare_read, (struct wl_display *p1));
+  DEFINE_METHOD1(int, wl_display_read_events, (struct wl_display *p1));
   DEFINE_METHOD1(int, wl_display_dispatch_pending, (struct wl_display *p1));
   DEFINE_METHOD1(int, wl_display_flush, (struct wl_display *p1));
   
@@ -155,7 +157,8 @@ class DllWaylandClient : public DllDynamic, public IDllWaylandClient
     RESOLVE_METHOD(wl_display_connect)
     RESOLVE_METHOD(wl_display_disconnect)
     RESOLVE_METHOD(wl_display_get_fd)
-    RESOLVE_METHOD(wl_display_dispatch)
+    RESOLVE_METHOD(wl_display_prepare_read)
+    RESOLVE_METHOD(wl_display_read_events)
     RESOLVE_METHOD(wl_display_dispatch_pending)
     RESOLVE_METHOD(wl_display_flush)
     RESOLVE_METHOD_FP(wl_proxy_marshal)

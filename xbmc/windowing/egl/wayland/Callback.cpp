@@ -65,9 +65,9 @@ xw::Callback::GetWlCallback()
 void
 xw::Callback::OnCallback(void *data,
                          struct wl_callback *callback,
-                         uint32_t time)
+                         uint32_t serial)
 {
-  static_cast<Callback *>(data)->m_func(time);
+  static_cast<Callback *>(data)->m_func(serial);
 }
 
 #endif

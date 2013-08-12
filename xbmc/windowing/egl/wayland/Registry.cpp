@@ -27,14 +27,6 @@
 #include "windowing/WaylandProtocol.h"
 #include "Registry.h"
 
-namespace
-{
-const std::string CompositorName("wl_compositor");
-const std::string ShellName("wl_shell");
-const std::string SeatName("wl_seat");
-const std::string OutputName("wl_output");
-}
-
 namespace xw = xbmc::wayland;
 
 const struct wl_registry_listener xw::Registry::m_listener =
@@ -42,6 +34,33 @@ const struct wl_registry_listener xw::Registry::m_listener =
   Registry::HandleGlobalCallback,
   Registry::HandleRemoveGlobalCallback
 };
+
+void
+xw::ExtraWaylandGlobals::SetHandler(const GlobalHandler &handler)
+{
+  m_handler = handler;
+}
+
+void
+xw::ExtraWaylandGlobals::NewGlobal(struct wl_registry *registry,
+                                   uint32_t name,
+                                   const char *interface,
+                                   uint32_t version)
+{
+  if (!m_handler.empty())
+    m_handler(registry, name, interface, version);
+}
+
+xw::ExtraWaylandGlobals &
+xw::ExtraWaylandGlobals::GetInstance()
+{
+  if (!m_instance)
+    m_instance.reset(new ExtraWaylandGlobals());
+
+  return *m_instance;
+}
+
+boost::scoped_ptr<xw::ExtraWaylandGlobals> xw::ExtraWaylandGlobals::m_instance;
 
 xw::Registry::Registry(IDllWaylandClient &clientLibrary,
                        struct wl_display *display,
@@ -69,10 +88,38 @@ xw::Registry::~Registry()
 }
 
 void
+xw::Registry::BindInternal(uint32_t name,
+                           const char *interface,
+                           uint32_t version,
+                           void *proxy)
+{
+  protocol::CallMethodOnWaylandObject(m_clientLibrary,
+                                      m_registry,
+                                      WL_REGISTRY_BIND,
+                                      name,
+                                      interface,
+                                      version,
+                                      proxy);
+}
+
+void
 xw::Registry::HandleGlobal(uint32_t name,
                            const char *interface,
                            uint32_t version)
 {
+  /* Check if our injected listener wants to know about this -
+   * otherwise let any external listeners know */
+  if (!m_registration.OnGlobalInterfaceAvailable(name,
+                                                 interface,
+                                                 version))
+  {
+    ExtraWaylandGlobals::GetInstance().NewGlobal(m_registry,
+                                                 name,
+                                                 interface,
+                                                 version);
+  }
+}
+/*
   if (interface == CompositorName)
   {
     struct wl_compositor *compositor =
@@ -80,13 +127,7 @@ xw::Registry::HandleGlobal(uint32_t name,
                                                                         struct wl_registry *>(m_clientLibrary,
                                                                                               m_registry,
                                                                                               m_clientLibrary.Get_wl_compositor_interface()));
-    protocol::CallMethodOnWaylandObject(m_clientLibrary,
-                                        m_registry,
-                                        WL_REGISTRY_BIND,
-                                        name,
-                                        reinterpret_cast<struct wl_interface *>(m_clientLibrary.Get_wl_compositor_interface())->name,
-                                        1,
-                                        compositor);
+
     m_registration.OnCompositorAvailable(compositor);
   }
   else if (interface == ShellName)
@@ -137,8 +178,10 @@ xw::Registry::HandleGlobal(uint32_t name,
                                         output);
     m_registration.OnOutputAvailable(output);
   }
-}
+  else
 
+}
+*/
 void
 xw::Registry::HandleRemoveGlobal(uint32_t name)
 {

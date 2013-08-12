@@ -1,0 +1,28 @@
+SRCS = XBMCWaylandTestExtension.cpp \
+       xbmc_wayland_test_protocol.c \
+       xbmc_wayland_test_server_protocol.h \
+       xbmc_wayland_test_client_protocol.h
+
+xbmc_wayland_test_protocol.c:
+	@WAYLAND_SCANNER@ code < protocol.xml > xbmc_wayland_test_protocol.c
+
+xbmc_wayland_test_server_protocol.h:
+	@WAYLAND_SCANNER@ server-header < protocol.xml > xbmc_wayland_test_server_protocol.h
+
+xbmc_wayland_test_client_protocol.h:
+	@WAYLAND_SCANNER@ client-header < protocol.xml > xbmc_wayland_test_client_protocol.h
+
+LIB = xbmc_wayland_test_extension.a
+
+ifeq (@USE_WAYLAND_TEST_EXTENSION@,1)
+WAYLAND_TEST_MODULE_INCLUDES = -I./xbmc/windowing/tests/wayland/ @WAYLAND_TEST_INCLUDES@
+WAYLAND_TEST_MODULE_LIBS = @WAYLAND_TEST_LIBS@
+
+INCLUDES+=$(WAYLAND_TEST_MODULE_INCLUDES)
+endif
+
+include @abs_top_srcdir@/Makefile.include
+-include $(patsubst %.cpp,%.P,$(patsubst %.c,%.P,$(patsubst %.h,%.P,$(SRCS))))
+
+xbmc-wayland-test-extension.so: xbmc_wayland_test_protocol.c xbmc_wayland_test_server_protocol.h xbmc_wayland_test_client_protocol.h $(LIB)
+	$(SILENT_LD) $(CXX) $(CXXFLAGS) $(LDFLAGS) $(WAYLAND_TEST_MODULE_INCLUDES) -shared -o $@ -Wl,--whole-archive $(LIB) -Wl,--no-whole-archive $(WAYLAND_TEST_MODULE_LIBS) -rdynamic

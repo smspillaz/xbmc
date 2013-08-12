@@ -1133,6 +1133,47 @@ if test "$use_wayland" = "yes" && test "$host_vendor" != "apple"; then
   AC_DEFINE([HAVE_WAYLAND], [1], [Define to 1 if you have Wayland libs installed.])
   AC_DEFINE([HAVE_XKBCOMMON], [1], [Define to 1 if you have libxkbcommon installed.])
 
+  # If we are also building with tests then we want to build
+  # wayland tests as well
+  if test "$configure_gtest" = "yes"; then
+    have_weston_sdk=no;
+    PKG_CHECK_MODULES([WESTON],
+                      [weston],
+                      [have_weston_sdk=yes],
+                      AC_MSG_WARN($missing_library))
+    PKG_CHECK_MODULES([PIXMAN],
+                      [pixman-1],
+                      [INCLUDES="$INCLUDES $PIXMAN_CFLAGS"],
+                      [AC_MSG_WARN($missing_library);
+                       have_weston_sdk=no])
+    AC_CHECK_PROG(WAYLAND_SCANNER, wayland-scanner, "yes", "no")
+
+    if test "$WAYLAND_SCANNER" = "no"; then
+      AC_MSG_WARN($missing_program)
+    fi
+
+    if test "$have_weston_sdk" = "yes" && test "$WAYLAND_SCANNER" = "yes"; then
+      AC_DEFINE([HAVE_WESTON], [1], [Define to 1 if Weston SDK is installed.])
+      # Figure out which version of the SDK we have and build that
+      PKG_CHECK_MODULES([WESTON_SDK1],
+                        [weston >= 1.0.6 weston < 1.0.90],
+                        AC_DEFINE(HAVE_WESTON_SDK1, 1, [Weston SDK 1]),
+                        AC_MSG_NOTICE($missing_library))
+      PKG_CHECK_MODULES([WESTON_SDK2],
+                        [weston >= 1.0.90 weston < 1.1.90],
+                        AC_DEFINE(HAVE_WESTON_SDK2, 1, [Weston SDK 2]),
+                        AC_MSG_NOTICE($missing_library))
+      PKG_CHECK_MODULES([WESTON_SDK3],
+                        [weston >= 1.1.90],
+                        AC_DEFINE(HAVE_WESTON_SDK3, 1, [Weston SDK 3]),
+                        AC_MSG_NOTICE($missing_library))
+      AC_SUBST(WAYLAND_TEST_INCLUDES, "$WAYLAND_CLIENT_CFLAGS $WESTON_CFLAGS $PIXMAN_CFLAGS")
+      AC_SUBST(WAYLAND_TEST_LIBS, "$WAYLAND_CLIENT_LIBS $WESTON_LIBS")
+      AC_SUBST(WAYLAND_SCANNER, wayland-scanner)
+      AC_SUBST(USE_WAYLAND_TEST_EXTENSION, 1)
+    fi
+  fi
+
   # Disable SDL and X11 builds
   use_sdl=no
   use_joystick=no
@@ -2443,6 +2484,8 @@ OUTPUT_FILES="Makefile \
     xbmc/android/loader/Makefile \
     xbmc/android/jni/Makefile \
     xbmc/utils/Makefile \
+    xbmc/windowing/tests/Makefile \
+    xbmc/windowing/tests/wayland/Makefile \
     xbmc/main/Makefile"
 
 if test "$use_skin_touched" = "yes"; then
