@@ -52,6 +52,7 @@
 #include "wayland/Seat.h"
 #include "wayland/Pointer.h"
 #include "wayland/Keyboard.h"
+#include "wayland/EventQueueStrategy.h"
 
 #include "input/linux/XKBCommonKeymap.h"
 #include "input/linux/Keymap.h"
@@ -76,9 +77,9 @@ class IEventListener
 public:
 
   virtual ~IEventListener() {}
-  virtual bool OnEvent(XBMC_Event &) = 0;
-  virtual bool OnFocused() = 0;
-  virtual bool OnUnfocused() = 0;
+  virtual void OnEvent(XBMC_Event &) = 0;
+  virtual void OnFocused() = 0;
+  virtual void OnUnfocused() = 0;
 };
 
 class ICursorManager
@@ -187,29 +188,22 @@ private:
   
   struct xkb_context *m_context;
 };
-
-class EventDispatch :
-  public IEventListener
-{
-public:
-
-  bool OnEvent(XBMC_Event &);
-  bool OnFocused();
-  bool OnUnfocused();
-};
 }
 
 namespace xw = xbmc::wayland;
 namespace xxkb = xbmc::xkbcommon;
+namespace xwe = xbmc::wayland::events;
 
 namespace
 {
 class WaylandEventLoop :
+  public xbmc::IEventListener,
   public xbmc::ITimeoutManager
 {
 public:
 
   WaylandEventLoop(IDllWaylandClient &clientLibrary,
+                   xwe::IEventQueueStrategy &strategy,
                    struct wl_display *display);
   
   void Dispatch();
@@ -234,11 +228,17 @@ private:
                             uint32_t timeout);
   void DispatchTimers();
   
+  void OnEvent(XBMC_Event &);
+  void OnFocused();
+  void OnUnfocused();
+  
   IDllWaylandClient &m_clientLibrary;
   
   struct wl_display *m_display;
   std::vector<CallbackTracker> m_callbackQueue;
   CStopWatch m_stopWatch;
+  
+  xwe::IEventQueueStrategy &m_eventQueue;
 };
 
 class WaylandInput :
@@ -250,7 +250,7 @@ public:
   WaylandInput(IDllWaylandClient &clientLibrary,
                IDllXKBCommon &xkbCommonLibrary,
                struct wl_seat *seat,
-               xbmc::EventDispatch &dispatch,
+               xbmc::IEventListener &dispatch,
                xbmc::ITimeoutManager &timeouts);
 
   void SetXBMCSurface(struct wl_surface *s);
@@ -268,8 +268,6 @@ private:
   void RemovePointer();
   void RemoveKeyboard();
 
-  bool OnEvent(XBMC_Event &);
-
   IDllWaylandClient &m_clientLibrary;
   IDllXKBCommon &m_xkbCommonLibrary;
 
@@ -281,7 +279,6 @@ private:
   boost::scoped_ptr<xw::Keyboard> m_keyboard;
 };
 
-xbmc::EventDispatch g_dispatch;
 boost::scoped_ptr <WaylandInput> g_inputInstance;
 boost::scoped_ptr <WaylandEventLoop> g_eventLoop;
 }
@@ -586,29 +583,10 @@ xbmc::KeyboardProcessor::Modifier(uint32_t serial,
   m_keymap->UpdateMask(depressed, latched, locked, group);
 }
 
-bool xbmc::EventDispatch::OnEvent(XBMC_Event &e)
-{
-  return g_application.OnEvent(e);
-}
-
-bool xbmc::EventDispatch::OnFocused()
-{
-  g_application.m_AppFocused = true;
-  g_Windowing.NotifyAppFocusChange(g_application.m_AppFocused);
-  return true;
-}
-
-bool xbmc::EventDispatch::OnUnfocused()
-{
-  g_application.m_AppFocused = false;
-  g_Windowing.NotifyAppFocusChange(g_application.m_AppFocused);
-  return true;
-}
-
 WaylandInput::WaylandInput(IDllWaylandClient &clientLibrary,
                            IDllXKBCommon &xkbCommonLibrary,
                            struct wl_seat *seat,
-                           xbmc::EventDispatch &dispatch,
+                           xbmc::IEventListener &dispatch,
                            xbmc::ITimeoutManager &timeouts) :
   m_clientLibrary(clientLibrary),
   m_xkbCommonLibrary(xkbCommonLibrary),
@@ -663,10 +641,47 @@ void WaylandInput::RemoveKeyboard()
   m_keyboard.reset();
 }
 
+namespace
+{
+void DispatchEventAction(XBMC_Event &e)
+{
+  g_application.OnEvent(e);
+}
+
+void DispatchFocusedAction()
+{
+  g_application.m_AppFocused = true;
+  g_Windowing.NotifyAppFocusChange(g_application.m_AppFocused);
+}
+
+void DispatchUnfocusedAction()
+{
+  g_application.m_AppFocused = false;
+  g_Windowing.NotifyAppFocusChange(g_application.m_AppFocused);
+}
+}
+
+void WaylandEventLoop::OnEvent(XBMC_Event &e)
+{
+  m_eventQueue.PushAction(boost::bind(DispatchEventAction, e));
+}
+
+void WaylandEventLoop::OnFocused()
+{
+  m_eventQueue.PushAction(boost::bind(DispatchFocusedAction));
+}
+
+void WaylandEventLoop::OnUnfocused()
+{
+  m_eventQueue.PushAction(boost::bind(DispatchUnfocusedAction));
+}
+
 WaylandEventLoop::WaylandEventLoop(IDllWaylandClient &clientLibrary,
+                                   xwe::IEventQueueStrategy &strategy,
                                    struct wl_display *display) :
   m_clientLibrary(clientLibrary),
-  m_display(display)
+  m_display(display),
+  m_eventQueue(strategy)
 {
   m_stopWatch.StartZero();
 }
@@ -724,9 +739,6 @@ void WaylandEventLoop::DispatchTimers()
 
 void WaylandEventLoop::Dispatch()
 {
-  m_clientLibrary.wl_display_dispatch_pending(m_display);
-  m_clientLibrary.wl_display_flush(m_display);
-
   /* Remove any timers which are no longer active */
   m_callbackQueue.erase (std::remove_if(m_callbackQueue.begin(),
                                         m_callbackQueue.end(),
@@ -746,19 +758,7 @@ void WaylandEventLoop::Dispatch()
       minTimeout = it->remaining;
   }
   
-  struct pollfd pfd;
-  pfd.events = POLLIN | POLLHUP | POLLERR;
-  pfd.revents = 0;
-  pfd.fd = m_clientLibrary.wl_display_get_fd(m_display);
-  
-  int pollTimeout = minTimeout == 0 ?
-                    -1 : minTimeout;
-
-  if (poll(&pfd, 1, pollTimeout) == -1)
-    throw std::runtime_error(strerror(errno));
-
-  DispatchTimers();
-  m_clientLibrary.wl_display_dispatch(m_display);
+  m_eventQueue.DispatchEventsFromMain();
 }
 
 xbmc::ITimeoutManager::CallbackPtr
@@ -815,15 +815,14 @@ bool CWinEventsWayland::MessagePump()
 }
 
 void CWinEventsWayland::SetWaylandDisplay(IDllWaylandClient &clientLibrary,
+                                          xwe::IEventQueueStrategy &strategy,
                                           struct wl_display *d)
 {
-  g_eventLoop.reset(new WaylandEventLoop(clientLibrary, d));
+  g_eventLoop.reset(new WaylandEventLoop(clientLibrary, strategy, d));
 }
 
 void CWinEventsWayland::DestroyWaylandDisplay()
 {
-  MessagePump();
-
   g_eventLoop.reset();
 }
 
@@ -838,7 +837,7 @@ void CWinEventsWayland::SetWaylandSeat(IDllWaylandClient &clientLibrary,
   g_inputInstance.reset(new WaylandInput(clientLibrary,
                                          xkbCommonLibrary,
                                          s,
-                                         g_dispatch,
+                                         *g_eventLoop,
                                          *g_eventLoop));
 }
 

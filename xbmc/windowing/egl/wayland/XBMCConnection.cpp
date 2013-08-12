@@ -48,6 +48,9 @@
 #include "windowing/WaylandProtocol.h"
 #include "XBMCConnection.h"
 
+#include "windowing/wayland/Wayland11EventQueueStrategy.h"
+#include "windowing/wayland/Wayland12EventQueueStrategy.h"
+
 namespace xbmc
 {
 namespace wayland
@@ -74,9 +77,15 @@ public:
   
   std::vector<boost::shared_ptr<Output> > m_outputs;
 
+  boost::scoped_ptr<events::IEventQueueStrategy> m_eventQueue;
+
   bool synchronized;
   boost::scoped_ptr<Callback> synchronizeCallback;
 
+  /* Do not call this from a non-main thread. The main thread may be
+   * waiting for a wl_display.sync event to be coming through and this
+   * function will merely spin until synchronized == true, for which
+   * a non-main thread may be responsible for setting as true */
   void WaitForSynchronize();
   void Synchronize();
 
@@ -89,6 +98,26 @@ public:
 }
 
 namespace xw = xbmc::wayland;
+namespace xwe = xbmc::wayland::events;
+
+namespace
+{
+xwe::IEventQueueStrategy *
+EventQueueForClientVersion(IDllWaylandClient &clientLibrary,
+                           struct wl_display *display)
+{
+  /* TODO: Test for wl_display_read_events / wl_display_prepare_read */
+  const bool version12 =
+    clientLibrary.wl_display_read_events_proc() &&
+    clientLibrary.wl_display_prepare_read_proc();
+  if (version12)
+    return new xw::version_12::EventQueueStrategy(clientLibrary,
+                                                  display);
+  else
+    return new xw::version_11::EventQueueStrategy(clientLibrary,
+                                                  display);
+}
+}
 
 xw::XBMCConnection::Private::Private(IDllWaylandClient &clientLibrary,
                                      IDllXKBCommon &xkbCommonLibrary,
@@ -99,12 +128,19 @@ xw::XBMCConnection::Private::Private(IDllWaylandClient &clientLibrary,
   m_display(new xw::Display(clientLibrary)),
   m_registry(new xw::Registry(clientLibrary,
                               m_display->GetWlDisplay(),
-                              *this))
+                              *this)),
+  m_eventQueue(EventQueueForClientVersion(m_clientLibrary,
+                                          m_display->GetWlDisplay()))
 {
   (*m_eventInjector.setDisplay)(clientLibrary,
+                                *(m_eventQueue.get()),
                                 m_display->GetWlDisplay());
 	
-  WaitForSynchronize();
+  /* Wait once for the globals to appear and then once
+   * for the globals to be initialized */
+  unsigned int waitCount = 2;
+  while (waitCount--)
+    WaitForSynchronize();
 
   if (m_outputs.empty())
   {
@@ -156,7 +192,9 @@ bool xw::XBMCConnection::Private::OnOutputAvailable(struct wl_output *o)
 {
   m_outputs.push_back(boost::shared_ptr<xw::Output>(new xw::Output(m_clientLibrary,
                                                                    o)));
-  WaitForSynchronize();
+  /* It is the responsibility of the caller to ensure that we have
+   * recieved all the events telling us the output modes by
+   * calling WaitForSynchronize() in the main thread */
   return true;
 }
 
@@ -169,6 +207,10 @@ void xw::XBMCConnection::Private::WaitForSynchronize()
   synchronizeCallback.reset(new xw::Callback(m_clientLibrary,
                                              m_display->Sync(),
                                              func));
+
+  /* For version 1.1 event queues the effect of this is going to be
+   * a spin-wait. That's not exactly ideal, but we do need to
+   * continuously flush the event queue */
   while (!synchronized)
     (*m_eventInjector.messagePump)();
 }

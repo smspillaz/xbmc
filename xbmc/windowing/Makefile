@@ -6,7 +6,10 @@ SRCS=WinEventsSDL.cpp \
 # Wayland implementation detail
 SRCS += wayland/Seat.cpp \
         wayland/Pointer.cpp \
-        wayland/Keyboard.cpp
+        wayland/Keyboard.cpp \
+        wayland/PollThread.cpp \
+        wayland/Wayland11EventQueueStrategy.cpp \
+        wayland/Wayland12EventQueueStrategy.cpp
 
 LIB=windowing.a
 
