@@ -280,10 +280,17 @@ bool CEGLWrapper::GetSurfaceSize(EGLDisplay display, EGLSurface surface, EGLint 
   if (!width || !height)
     return false;
 
-  if (!eglQuerySurface(display, surface, EGL_WIDTH, width)     ||
-        !eglQuerySurface(display, surface, EGL_HEIGHT, height) ||
-        *width <= 0 || *height <= 0)
-  return false;
+  /* The intel driver on wayland is broken and always returns a surface
+   * size of -1, -1. Work around it for now */
+  const bool IsWayland = m_nativeTypes->GetNativeName() == "wayland";
+  const bool FailedToQuerySurfaceSize =
+    !eglQuerySurface(display, surface, EGL_WIDTH, width) ||
+    !eglQuerySurface(display, surface, EGL_HEIGHT, height);
+  const bool InvalidSurfaceSize =
+    *width <= 0 || *height <= 0;
+
+  if (!IsWayland && (FailedToQuerySurfaceSize || InvalidSurfaceSize))
+    return false;
 
   return true;
 }
