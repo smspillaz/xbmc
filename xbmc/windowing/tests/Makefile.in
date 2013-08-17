@@ -1,0 +1,11 @@
+SRCS = TestEGLNativeTypeWayland.cpp
+
+ifeq (@USE_WAYLAND_TEST_EXTENSION@,1)
+SRCS += wayland/xbmc_wayland_test_protocol.c
+endif
+
+LIB = test_wayland.a
+
+include ../../../Makefile.include
+-include $(patsubst %.cpp,%.P,$(patsubst %.c,%.P,$(patsubst %.h,%.P,$(SRCS))))
+
