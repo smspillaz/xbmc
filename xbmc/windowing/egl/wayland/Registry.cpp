@@ -35,6 +35,33 @@ const struct wl_registry_listener xw::Registry::m_listener =
   Registry::HandleRemoveGlobalCallback
 };
 
+void
+xw::ExtraWaylandGlobals::SetHandler(const GlobalHandler &handler)
+{
+  m_handler = handler;
+}
+
+void
+xw::ExtraWaylandGlobals::NewGlobal(struct wl_registry *registry,
+                                   uint32_t name,
+                                   const char *interface,
+                                   uint32_t version)
+{
+  if (!m_handler.empty())
+    m_handler(registry, name, interface, version);
+}
+
+xw::ExtraWaylandGlobals &
+xw::ExtraWaylandGlobals::GetInstance()
+{
+  if (!m_instance)
+    m_instance.reset(new ExtraWaylandGlobals());
+
+  return *m_instance;
+}
+
+boost::scoped_ptr<xw::ExtraWaylandGlobals> xw::ExtraWaylandGlobals::m_instance;
+
 xw::Registry::Registry(IDllWaylandClient &clientLibrary,
                        struct wl_display *display,
                        IWaylandRegistration &registration) :
@@ -80,9 +107,17 @@ xw::Registry::HandleGlobal(uint32_t name,
                            const char *interface,
                            uint32_t version)
 {
-  m_registration.OnGlobalInterfaceAvailable(name,
-                                            interface,
-                                            version);
+  /* Check if our injected listener wants to know about this -
+   * otherwise let any external listeners know */
+  if (!m_registration.OnGlobalInterfaceAvailable(name,
+                                                 interface,
+                                                 version))
+  {
+    ExtraWaylandGlobals::GetInstance().NewGlobal(m_registry,
+                                                 name,
+                                                 interface,
+                                                 version);
+  }
 }
 
 void
