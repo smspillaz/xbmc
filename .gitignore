@@ -596,6 +596,13 @@ lib/cmyth/Makefile
 /xbmc/interfaces/python/generated/
 /xbmc/interfaces/python/test/Makefile
 
+#/xbmc/windowing/
+/xbmc/windowing/tests/wayland/xbmc_wayland_test_client_protocol.h
+/xbmc/windowing/tests/wayland/xbmc_wayland_test_protocol.c
+/xbmc/windowing/tests/wayland/xbmc_wayland_test_server_protocol.h
+/xbmc/windowing/tests/wayland/Makefile
+
+
 # /xbmc/linux/
 /xbmc/linux/Makefile
 
