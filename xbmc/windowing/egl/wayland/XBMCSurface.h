@@ -25,8 +25,6 @@
 
 #include <boost/function.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/shared_ptr.hpp>
 
 class IDllWaylandClient;
 class IDllWaylandEGL;
@@ -61,13 +59,13 @@ public:
   XBMCSurface(IDllWaylandClient &clientLibrary,
               IDllWaylandEGL &eglLibrary,
               const EventInjector &eventInjector,
-              const boost::scoped_ptr<Compositor> &compositor,
-              const boost::scoped_ptr<Shell> &shell,
+              Compositor &compositor,
+              Shell &shell,
               uint32_t width,
               uint32_t height);
   ~XBMCSurface();
 
-  void Show(const boost::shared_ptr<Output> &output);
+  void Show(Output &output);
   void Resize(uint32_t width, uint32_t height);
   EGLNativeWindowType * EGLNativeWindow() const;
 
