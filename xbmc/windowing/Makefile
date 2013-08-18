@@ -4,9 +4,13 @@ SRCS=WinEventsSDL.cpp \
      WinSystem.cpp \
 
 # Wayland implementation detail
-SRCS += wayland/Seat.cpp \
+SRCS += wayland/EventLoop.cpp \
+        wayland/Seat.cpp \
         wayland/Pointer.cpp \
+        wayland/PointerProcessor.cpp \
+        wayland/InputFactory.cpp \
         wayland/Keyboard.cpp \
+        wayland/KeyboardProcessor.cpp \
         wayland/PollThread.cpp \
         wayland/Wayland11EventQueueStrategy.cpp \
         wayland/Wayland12EventQueueStrategy.cpp

@@ -146,8 +146,8 @@ bool CEGLNativeTypeWayland::CreateNativeDisplay()
   {
     xw::XBMCConnection::EventInjector injector =
     {
-      CWinEventsWayland::SetWaylandDisplay,
-      CWinEventsWayland::DestroyWaylandDisplay,
+      CWinEventsWayland::SetEventQueueStrategy,
+      CWinEventsWayland::DestroyEventQueueStrategy,
       CWinEventsWayland::SetWaylandSeat,
       CWinEventsWayland::DestroyWaylandSeat,
       CWinEventsWayland::MessagePump
