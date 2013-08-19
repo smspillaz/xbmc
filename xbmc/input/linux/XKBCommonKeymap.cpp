@@ -25,6 +25,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <boost/scope_exit.hpp>
+
 #include <sys/mman.h>
 
 #include <xkbcommon/xkbcommon.h>
@@ -33,6 +35,20 @@
 
 #include "windowing/DllXKBCommon.h"
 #include "XKBCommonKeymap.h"
+
+struct xkb_context *
+CXKBKeymap::CreateXKBContext(IDllXKBCommon &xkbCommonLibrary)
+{
+  enum xkb_context_flags flags =
+    static_cast<enum xkb_context_flags>(0);
+
+  struct xkb_context *context = xkbCommonLibrary.xkb_context_new(flags);
+  
+  if (!context)
+    throw std::runtime_error("Failed to create xkb context");
+  
+  return context;
+}
 
 struct xkb_keymap *
 CXKBKeymap::ReceiveXKBKeymapFromSharedMemory(IDllXKBCommon &xkbCommonLibrary, struct xkb_context *context, const int &fd, uint32_t size)
@@ -62,6 +78,30 @@ CXKBKeymap::ReceiveXKBKeymapFromSharedMemory(IDllXKBCommon &xkbCommonLibrary, st
   return keymap;
 }
 
+struct xkb_keymap *
+CXKBKeymap::CreateXKBKeymapFromNames(IDllXKBCommon &xkbCommonLibrary, struct xkb_context *context, const std::string &rules, const std::string &model, const std::string &layout, const std::string &variant, const std::string &options)
+{
+  enum xkb_keymap_compile_flags flags =
+    static_cast<enum xkb_keymap_compile_flags>(0);
+  
+  struct xkb_rule_names names =
+  {
+    rules.c_str(),
+    model.c_str(),
+    layout.c_str(),
+    variant.c_str(),
+    options.c_str()
+  };
+  
+  struct xkb_keymap *keymap =
+    xkbCommonLibrary.xkb_keymap_new_from_names(context, &names, flags);
+
+  if (!keymap)
+    throw std::runtime_error("Failed to compile keymap");
+
+  return keymap;
+}
+
 struct xkb_state *
 CXKBKeymap::CreateXKBStateFromKeymap(IDllXKBCommon &xkbCommonLibrary, struct xkb_keymap *keymap)
 {
@@ -74,11 +114,11 @@ CXKBKeymap::CreateXKBStateFromKeymap(IDllXKBCommon &xkbCommonLibrary, struct xkb
 }
 
 CXKBKeymap::CXKBKeymap(IDllXKBCommon &xkbCommonLibrary,
-                       struct xkb_keymap *keymap,
-                       struct xkb_state *state) :
+                       struct xkb_keymap *keymap) :
   m_xkbCommonLibrary(xkbCommonLibrary),
   m_keymap(keymap),
-  m_state(state),
+  m_state(CreateXKBStateFromKeymap(xkbCommonLibrary,
+                                   keymap)),
   m_internalLeftControlIndex(m_xkbCommonLibrary.xkb_keymap_mod_get_index(m_keymap,
                                                                          XKB_MOD_NAME_CTRL)),
   m_internalLeftShiftIndex(m_xkbCommonLibrary.xkb_keymap_mod_get_index(m_keymap,
