@@ -1,4 +1,12 @@
-SRCS = TestEGLNativeTypeWayland.cpp
+SRCS = StubCursorManager.cpp \
+       StubEventListener.cpp \
+       TestEGLNativeTypeWayland.cpp \
+       TestWaylandInputUnit.cpp \
+       TestXBMCWaylandInputAcceptance.cpp \
+       TmpEnv.cpp \
+       WestonProcess.cpp \
+       WestonTest.cpp \
+       XBMCWayland.cpp
 
 WAYLAND_TEST_MODULE_PROTOCOL = protocol.xml
 WAYLAND_TEST_MODULE_PROTOCOL_SRCS = xbmc_wayland_test_protocol.c
