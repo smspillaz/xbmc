@@ -48,6 +48,8 @@ public:
   static struct xkb_keymap * ReceiveXKBKeymapFromSharedMemory(IDllXKBCommon &xkbCommonLibrary, struct xkb_context *, const int &fd, uint32_t size);
   static struct xkb_state * CreateXKBStateFromKeymap(IDllXKBCommon &xkbCommonLibrary, struct xkb_keymap *keymap);
   static struct xkb_keymap * CreateXKBKeymapFromNames(IDllXKBCommon &xkbCommonLibrary, struct xkb_context *context,  const std::string &rules, const std::string &model, const std::string &layout, const std::string &variant, const std::string &options);
+
+  static uint32_t XBMCKeysymForKeysym(uint32_t sym);
 private:
 
   uint32_t KeysymForKeycode(uint32_t code) const;

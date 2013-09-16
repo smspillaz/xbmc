@@ -228,10 +228,8 @@ uint32_t CXKBKeymap::ActiveXBMCModifiers() const
   return static_cast<uint32_t>(xbmcModifiers);
 }
 
-uint32_t CXKBKeymap::XBMCKeysymForKeycode(uint32_t code) const
+uint32_t CXKBKeymap::XBMCKeysymForKeysym(uint32_t sym)
 {
-  uint32_t sym =  KeysymForKeycode(code);
-
   /* Strip high bits from functional keys */
   if ((sym & ~(0xff00)) <= 0x1b)
     sym = sym & ~(0xff00);
@@ -333,6 +331,13 @@ uint32_t CXKBKeymap::XBMCKeysymForKeycode(uint32_t code) const
   }
 
   return sym;
+}
+
+uint32_t CXKBKeymap::XBMCKeysymForKeycode(uint32_t code) const
+{
+  uint32_t sym = KeysymForKeycode(code);
+
+  return XBMCKeysymForKeysym(sym);
 }
 
 #endif
