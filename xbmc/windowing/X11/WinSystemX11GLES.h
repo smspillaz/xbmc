@@ -26,6 +26,7 @@
 #include <EGL/egl.h>
 #include <X11/Xlib.h>
 #include "rendering/gles/RenderSystemGLES.h"
+#include "windowing/X11/XRandR.h"
 #include "utils/GlobalsHandling.h"
 
 class CWinSystemX11GLES : public CWinSystemBase, public CRenderSystemGLES
@@ -77,6 +78,8 @@ protected:
   CStdString m_eglext;
 
   int m_iVSyncErrors;
+
+  CXRandR g_xrandr;
 };
 
 XBMC_GLOBAL_REF(CWinSystemX11GLES,g_Windowing);

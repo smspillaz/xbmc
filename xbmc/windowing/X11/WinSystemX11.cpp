@@ -37,10 +37,7 @@
 #include <X11/Xlib.h>
 #include "cores/VideoRenderers/RenderManager.h"
 #include "utils/TimeUtils.h"
-
-#if defined(HAS_XRANDR)
 #include <X11/extensions/Xrandr.h>
-#endif
 
 using namespace std;
 
@@ -79,6 +76,8 @@ bool CWinSystemX11::InitWindowSystem()
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
+    g_xrandr.LoadCustomModeLinesToAllOutputs();
+
     return CWinSystemBase::InitWindowSystem();
   }
   else
@@ -89,11 +88,9 @@ bool CWinSystemX11::InitWindowSystem()
 
 bool CWinSystemX11::DestroyWindowSystem()
 {
-#if defined(HAS_XRANDR)
   //restore videomode on exit
   if (m_bFullScreen)
     g_xrandr.RestoreState();
-#endif
 
   if (m_dpy)
   {
@@ -143,11 +140,9 @@ bool CWinSystemX11::CreateNewWindow(const CStdString& name, bool fullScreen, RES
   delete iconTexture;
 
   // register XRandR Events
-#if defined(HAS_XRANDR)
   int iReturn;
   XRRQueryExtension(m_dpy, &m_RREventBase, &iReturn);
   XRRSelectInput(m_dpy, m_wmWindow, RRScreenChangeNotifyMask);
-#endif
 
   m_bWindowCreated = true;
   return true;
@@ -189,7 +184,6 @@ bool CWinSystemX11::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool bl
   m_nHeight     = res.iHeight;
   m_bFullScreen = fullScreen;
 
-#if defined(HAS_XRANDR)
   XOutput out;
   XMode mode;
   out.name = res.strOutput;
@@ -205,7 +199,6 @@ bool CWinSystemX11::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, bool bl
   }
   else
     g_xrandr.RestoreState();
-#endif
 
   int options = SDL_OPENGL;
   if (m_bFullScreen)
@@ -232,7 +225,6 @@ void CWinSystemX11::UpdateResolutions()
   CWinSystemBase::UpdateResolutions();
 
 
-#if defined(HAS_XRANDR)
   if(g_xrandr.Query())
   {
     XOutput out  = g_xrandr.GetCurrentOutput();
@@ -242,16 +234,12 @@ void CWinSystemX11::UpdateResolutions()
     CDisplaySettings::Get().GetResolutionInfo(RES_DESKTOP).strOutput = out.name;
   }
   else
-#endif
   {
     int x11screen = DefaultScreen(m_dpy);
     int w = DisplayWidth(m_dpy, x11screen);
     int h = DisplayHeight(m_dpy, x11screen);
     UpdateDesktopResolution(CDisplaySettings::Get().GetResolutionInfo(RES_DESKTOP), 0, w, h, 0.0);
   }
-
-
-#if defined(HAS_XRANDR)
 
   CLog::Log(LOGINFO, "Available videomodes (xrandr):");
   vector<XOutput>::iterator outiter;
@@ -299,8 +287,6 @@ void CWinSystemX11::UpdateResolutions()
       CDisplaySettings::Get().AddResolutionInfo(res);
     }
   }
-#endif
-
 }
 
 bool CWinSystemX11::IsSuitableVisual(XVisualInfo *vInfo)

@@ -23,8 +23,6 @@
 
 #include "system.h"
 
-#ifdef HAS_XRANDR
-
 #include "utils/StdString.h"
 #include <vector>
 #include <map>
@@ -100,10 +98,6 @@ public:
   void LoadCustomModeLinesToAllOutputs(void);
   void SaveState();
   void RestoreState();
-  //bool Has1080i();
-  //bool Has1080p();
-  //bool Has720p();
-  //bool Has480p();
 
 private:
   bool m_bInit;
@@ -112,9 +106,5 @@ private:
   CStdString m_currentOutput;
   CStdString m_currentMode;
 };
-
-extern CXRandR g_xrandr;
-
-#endif
 
 #endif

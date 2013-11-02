@@ -25,7 +25,7 @@
 
 //TODO: get rid of #ifdef hell, abstract implementations in separate classes
 
-#if defined(HAS_GLX) && defined(HAS_XRANDR)
+#if defined(HAS_GLX)
   #include "system_gl.h"
   #include <X11/X.h>
   #include <X11/Xlib.h>
@@ -105,7 +105,7 @@ class CVideoReferenceClock : public CThread
 
     CCriticalSection m_CritSection;
 
-#if defined(HAS_GLX) && defined(HAS_XRANDR)
+#if defined(HAS_GLX)
     bool SetupGLX();
     void RunGLX();
     void CleanupGLX();

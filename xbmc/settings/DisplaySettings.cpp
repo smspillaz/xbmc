@@ -115,11 +115,9 @@ bool CDisplaySettings::Load(const TiXmlNode *settings)
     XMLUtils::GetString(pResolution, "description", cal.strMode);
     XMLUtils::GetInt(pResolution, "subtitles", cal.iSubtitles);
     XMLUtils::GetFloat(pResolution, "pixelratio", cal.fPixelRatio);
-#ifdef HAS_XRANDR
     XMLUtils::GetFloat(pResolution, "refreshrate", cal.fRefreshRate);
     XMLUtils::GetString(pResolution, "output", cal.strOutput);
     XMLUtils::GetString(pResolution, "xrandrid", cal.strId);
-#endif
 
     const TiXmlElement *pOverscan = pResolution->FirstChildElement("overscan");
     if (pOverscan)
@@ -179,11 +177,9 @@ bool CDisplaySettings::Save(TiXmlNode *settings) const
     XMLUtils::SetString(pNode, "description", it->strMode);
     XMLUtils::SetInt(pNode, "subtitles", it->iSubtitles);
     XMLUtils::SetFloat(pNode, "pixelratio", it->fPixelRatio);
-#ifdef HAS_XRANDR
     XMLUtils::SetFloat(pNode, "refreshrate", it->fRefreshRate);
     XMLUtils::SetString(pNode, "output", it->strOutput);
     XMLUtils::SetString(pNode, "xrandrid", it->strId);
-#endif
 
     // create the overscan child
     TiXmlElement overscanElement("overscan");

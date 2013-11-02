@@ -27,7 +27,7 @@
 #include "utils/StringUtils.h"
 #include "threads/SingleLock.h"
 
-#if defined(HAS_GLX) && defined(HAS_XRANDR)
+#if defined(HAS_GLX)
   #include <sstream>
   #include <X11/extensions/Xrandr.h>
   #include "windowing/WindowingFactory.h"
@@ -127,7 +127,7 @@ CVideoReferenceClock::CVideoReferenceClock() : CThread("VideoReferenceClock")
   m_RefreshChanged = 0;
   m_VblankTime = 0;
 
-#if defined(HAS_GLX) && defined(HAS_XRANDR)
+#if defined(HAS_GLX)
   m_glXWaitVideoSyncSGI = NULL;
   m_glXGetVideoSyncSGI = NULL;
   m_Dpy = NULL;
@@ -156,7 +156,7 @@ void CVideoReferenceClock::Process()
   while(!m_bStop)
   {
     //set up the vblank clock
-#if defined(HAS_GLX) && defined(HAS_XRANDR)
+#if defined(HAS_GLX)
     SetupSuccess = SetupGLX();
 #elif defined(TARGET_WINDOWS) && defined(HAS_DX)
     SetupSuccess = SetupD3D();
@@ -188,7 +188,7 @@ void CVideoReferenceClock::Process()
       SingleLock.Leave();
 
       //run the clock
-#if defined(HAS_GLX) && defined(HAS_XRANDR)
+#if defined(HAS_GLX)
       RunGLX();
 #elif defined(TARGET_WINDOWS) && defined(HAS_DX)
       RunD3D();
@@ -210,7 +210,7 @@ void CVideoReferenceClock::Process()
     SingleLock.Leave();
 
     //clean up the vblank clock
-#if defined(HAS_GLX) && defined(HAS_XRANDR)
+#if defined(HAS_GLX)
     CleanupGLX();
 #elif defined(TARGET_WINDOWS) && defined(HAS_DX)
     CleanupD3D();
@@ -231,7 +231,7 @@ bool CVideoReferenceClock::WaitStarted(int MSecs)
   return m_Started.WaitMSec(MSecs);
 }
 
-#if defined(HAS_GLX) && defined(HAS_XRANDR)
+#if defined(HAS_GLX)
 bool CVideoReferenceClock::SetupGLX()
 {
   int singleBufferAttributes[] = {
@@ -1184,8 +1184,7 @@ bool CVideoReferenceClock::UpdateRefreshrate(bool Forced /*= false*/)
   else
     m_LastRefreshTime = m_CurrTime;
 
-#if defined(HAS_GLX) && defined(HAS_XRANDR)
-
+#if defined(HAS_GLX)
   //check for RandR events
   bool   GotEvent = Forced || m_RefreshChanged == 2;
   XEvent Event;

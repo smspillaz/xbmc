@@ -28,6 +28,7 @@
 #include <SDL/SDL.h>
 
 #include "windowing/WinSystem.h"
+#include "windowing/X11/XRandR.h"
 #include "utils/Stopwatch.h"
 #include "threads/CriticalSection.h"
 #include "settings/ISettingCallback.h"
@@ -91,6 +92,8 @@ private:
   void SetGrabMode(const CSetting *setting = NULL);
 
   CStopWatch m_screensaverReset;
+
+  CXRandR g_xrandr;
 };
 
 #endif // WINDOW_SYSTEM_H

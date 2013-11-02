@@ -115,6 +115,8 @@ bool CWinSystemX11GLES::InitWindowSystem()
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, ASIZE);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
+        g_xrandr.LoadCustomModeLinesToAllOutputs();
+
 	return CWinSystemBase::InitWindowSystem();
   }
   else
@@ -213,8 +215,6 @@ bool CWinSystemX11GLES::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, boo
   m_nHeight     = res.iHeight;
   m_bFullScreen = fullScreen;
 
-#if defined(HAS_XRANDR)
-
   if(m_bFullScreen)
   {
 	XOutput out;
@@ -229,7 +229,6 @@ bool CWinSystemX11GLES::SetFullScreen(bool fullScreen, RESOLUTION_INFO& res, boo
   else
 	g_xrandr.RestoreState();
 
-#endif
 
 #if (HAS_GLES == 2)
     int options = 0;
@@ -255,7 +254,6 @@ void CWinSystemX11GLES::UpdateResolutions()
 {
   CWinSystemBase::UpdateResolutions();
 
-#if defined(HAS_XRANDR)
   {
     XOutput out  = g_xrandr.GetCurrentOutput();
     XMode   mode = g_xrandr.GetCurrentMode(out.name);
@@ -263,16 +261,6 @@ void CWinSystemX11GLES::UpdateResolutions()
     CDisplaySettings::Get().GetResolutionInfo(RES_DESKTOP).strId     = mode.id;
     CDisplaySettings::Get().GetResolutionInfo(RES_DESKTOP).strOutput = out.name;
   }
-#else
-  {
-    int x11screen = DefaultScreen(m_dpy);
-    int w = DisplayWidth(m_dpy, x11screen);
-    int h = DisplayHeight(m_dpy, x11screen);
-    UpdateDesktopResolution(CDisplaySettings::Get().GetResolutionInfo(RES_DESKTOP), 0, w, h, 0.0);
-  }
-#endif
-
-#if defined(HAS_XRANDR)
 
   CLog::Log(LOGINFO, "Available videomodes (xrandr):");
   vector<XOutput>::iterator outiter;
@@ -319,7 +307,6 @@ void CWinSystemX11GLES::UpdateResolutions()
       CDisplaySettings::Get().AddResolutionInfo(res);
     }
   }
-#endif
 }
 
 bool CWinSystemX11GLES::IsExtSupported(const char* extension)
