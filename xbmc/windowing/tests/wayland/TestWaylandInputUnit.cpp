@@ -17,7 +17,7 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
-#include <tr1/tuple>
+#include <tuple>
 
 #include <gtest/gtest.h>
 
