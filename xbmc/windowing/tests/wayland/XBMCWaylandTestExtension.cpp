@@ -679,6 +679,8 @@ xtwc::Compositor::Seat()
 struct weston_surface *
 xtwc::Compositor::TopSurface()
 {
+/* Surfaces and views become different things in Weston 1.4 */
+#if WESTON_VERSION_AT_LEAST(1, 4, 0)
   struct weston_view *view;
 
   /* The strange semantics of wl_container_of means that we can't
@@ -688,6 +690,13 @@ xtwc::Compositor::TopSurface()
                          view,
                          link);
   return view->surface;
+#else
+  struct weston_surface *surface;
+
+  return wl_container_of(m_compositor->surface_list.prev,
+                         surface,
+                         link);
+#endif
 }
 
 void
